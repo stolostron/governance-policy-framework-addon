@@ -79,11 +79,33 @@ jobs:
         export COVERAGE_E2E_OUT=coverage_e2e_hosted_mode.out
         make e2e-test-coverage
 
-    - name: Test Coverage Verification
-      if: ${{ github.event_name == 'pull_request' }}
+    - name: Test Coverage and Report Generation
       run: |
-        make test-coverage
+        make test-coverage | tee report_unit.json
         make coverage-verify
+        make gosec-scan
+        cat gosec.json
+
+    - name: Store the GitHub triggering event for the sonarcloud workflow
+      if: |
+        matrix.kind == 'latest' &&
+        github.repository_owner == 'stolostron'
+      run: |
+        cat <<EOF > event.json
+        ${{ toJSON(github.event) }}
+        EOF
+
+    - name: Upload artifacts for the sonarcloud workflow
+      if: |
+        matrix.kind == 'latest' &&
+        github.repository_owner == 'stolostron'
+      uses: actions/upload-artifact@v3
+      with:
+        name: artifacts
+        path: |
+          governance-policy-framework-addon/coverage*.out
+          governance-policy-framework-addon/event.json
+          governance-policy-framework-addon/gosec.json
 
     - name: Verify Deployment Configuration
       run: |
