@@ -57,7 +57,7 @@ COVERAGE_E2E_OUT ?= coverage_e2e.out
 # Use your own docker registry and image name for dev/test by overridding the IMG and REGISTRY environment variable.
 IMG ?= $(shell cat COMPONENT_NAME 2> /dev/null)
 VERSION ?= $(shell cat COMPONENT_VERSION 2> /dev/null)
-REGISTRY ?= quay.io/open-cluster-management
+REGISTRY ?= quay.io/stolostron
 TAG ?= latest
 IMAGE_NAME_AND_VERSION ?= $(REGISTRY)/$(IMG)
 
@@ -238,7 +238,7 @@ kind-bootstrap-cluster-dev: kind-create-cluster install-crds install-resources
 .PHONY: kind-deploy-controller
 kind-deploy-controller:
 	@echo installing $(IMG)
-	kubectl create ns $(KIND_NAMESPACE) --kubeconfig=$(MANAGED_CONFIG)
+	-kubectl create ns $(KIND_NAMESPACE) --kubeconfig=$(MANAGED_CONFIG)
 	kubectl create secret -n $(KIND_NAMESPACE) generic hub-kubeconfig --from-file=kubeconfig=$(HUB_CONFIG_INTERNAL) --kubeconfig=$(MANAGED_CONFIG)
 	kubectl apply -f deploy/operator.yaml -n $(KIND_NAMESPACE) --kubeconfig=$(MANAGED_CONFIG)
 
@@ -269,9 +269,9 @@ kind-delete-cluster:
 .PHONY: install-crds
 install-crds:
 	@echo installing crds
-	kubectl apply -f https://raw.githubusercontent.com/open-cluster-management-io/governance-policy-propagator/$(BRANCH)/deploy/crds/policy.open-cluster-management.io_policies.yaml --kubeconfig=$(HUB_CONFIG)
-	kubectl apply -f https://raw.githubusercontent.com/open-cluster-management-io/governance-policy-propagator/$(BRANCH)/deploy/crds/policy.open-cluster-management.io_policies.yaml --kubeconfig=$(MANAGED_CONFIG)
-	kubectl apply -f https://raw.githubusercontent.com/open-cluster-management-io/config-policy-controller/$(BRANCH)/deploy/crds/policy.open-cluster-management.io_configurationpolicies.yaml --kubeconfig=$(MANAGED_CONFIG)
+	kubectl apply -f https://raw.githubusercontent.com/stolostron/governance-policy-propagator/$(BRANCH)/deploy/crds/policy.open-cluster-management.io_policies.yaml --kubeconfig=$(HUB_CONFIG)
+	kubectl apply -f https://raw.githubusercontent.com/stolostron/governance-policy-propagator/$(BRANCH)/deploy/crds/policy.open-cluster-management.io_policies.yaml --kubeconfig=$(MANAGED_CONFIG)
+	kubectl apply -f https://raw.githubusercontent.com/stolostron/config-policy-controller/$(BRANCH)/deploy/crds/policy.open-cluster-management.io_configurationpolicies.yaml --kubeconfig=$(MANAGED_CONFIG)
 
 .PHONY: install-resources
 install-resources:
