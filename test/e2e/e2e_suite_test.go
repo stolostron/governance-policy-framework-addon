@@ -97,7 +97,7 @@ var _ = BeforeSuite(func() {
 	clientHubDynamic = NewKubeClientDynamic("", kubeconfigHub, "")
 	clientManaged = NewKubeClient("", kubeconfigManaged, "")
 	clientManagedDynamic = NewKubeClientDynamic("", kubeconfigManaged, "")
-	defaultImageRegistry = "quay.io/open-cluster-management"
+	defaultImageRegistry = "quay.io/stolostron"
 	testNamespace = "managed"
 	defaultTimeoutSeconds = 30
 	By("Create Namespace if needed")

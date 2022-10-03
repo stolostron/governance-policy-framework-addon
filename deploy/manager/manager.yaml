@@ -18,7 +18,7 @@ spec:
       serviceAccountName: governance-policy-framework-addon
       containers:
         - name: governance-policy-framework-addon
-          image: quay.io/open-cluster-management/governance-policy-framework-addon:latest
+          image: quay.io/stolostron/governance-policy-framework-addon:latest
           command:
             - governance-policy-framework-addon
           args:
