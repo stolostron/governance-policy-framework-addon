@@ -8,12 +8,13 @@ require (
 	github.com/onsi/gomega v1.20.2
 	github.com/spf13/pflag v1.0.5
 	github.com/stolostron/go-log-utils v0.1.1
+	github.com/stolostron/kubernetes-dependency-watches v0.1.0
 	k8s.io/api v0.23.10
 	k8s.io/apimachinery v0.23.10
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog/v2 v2.80.0
 	open-cluster-management.io/addon-framework v0.3.0
-	open-cluster-management.io/governance-policy-propagator v0.8.0
+	open-cluster-management.io/governance-policy-propagator v0.8.1-0.20221014182333-d078c8d17ca7
 	sigs.k8s.io/controller-runtime v0.11.2
 )
 
@@ -45,6 +46,7 @@ require (
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/kr/pretty v0.3.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -74,6 +76,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.23.5 // indirect
 	k8s.io/apiserver v0.23.5 // indirect
 	k8s.io/component-base v0.23.5 // indirect
+	k8s.io/klog v1.0.0 // indirect
 	k8s.io/kube-aggregator v0.23.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20220124234850-424119656bbf // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
@@ -89,6 +92,6 @@ replace (
 	golang.org/x/crypto => golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // CVE-2021-43565
 	golang.org/x/text => golang.org/x/text v0.3.8 // CVE-2022-32149
 	k8s.io/client-go => k8s.io/client-go v0.23.10
-	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator v0.0.0-20220727212642-86a318ab17cf
+	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator v0.0.0-20221014184845-b977f1eb0478
 	open-cluster-management.io/multicloud-operators-subscription => github.com/stolostron/multicloud-operators-subscription v1.2.4-0-20211122-7277a37.0.20220727170504-931d9002a21f
 )
