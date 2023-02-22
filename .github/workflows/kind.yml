@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REGISTRY: localhost:5000
+      KIND_VERSION: ${{ matrix.kind }}
     strategy:
       fail-fast: false
       matrix:
@@ -62,8 +63,6 @@ jobs:
         make test
 
     - name: Create K8s KinD Cluster - ${{ matrix.kind }}
-      env:
-        KIND_VERSION: ${{ matrix.kind }}
       run: |
         make kind-bootstrap-cluster-dev
 
