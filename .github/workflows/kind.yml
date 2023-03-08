@@ -80,6 +80,7 @@ jobs:
         make e2e-test-coverage
 
     - name: Test Coverage and Report Generation
+      if: ${{ matrix.kind == 'latest' }}
       run: |
         make test-coverage | tee report_unit.json
         make coverage-verify
