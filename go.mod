@@ -19,6 +19,7 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog/v2 v2.80.0
 	open-cluster-management.io/addon-framework v0.3.0
+	open-cluster-management.io/config-policy-controller v0.10.0
 	open-cluster-management.io/governance-policy-propagator v0.10.0
 	sigs.k8s.io/controller-runtime v0.11.2
 )
@@ -72,8 +73,8 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
-	go.uber.org/atomic v1.7.0 // indirect
-	go.uber.org/multierr v1.6.0 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
+	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
@@ -91,7 +92,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiserver v0.23.5 // indirect
-	k8s.io/component-base v0.23.5 // indirect
+	k8s.io/component-base v0.23.9 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/kube-aggregator v0.23.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20220124234850-424119656bbf // indirect
@@ -108,6 +109,7 @@ replace (
 	golang.org/x/crypto => golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // CVE-2021-43565
 	golang.org/x/text => golang.org/x/text v0.3.8 // CVE-2022-32149
 	k8s.io/client-go => k8s.io/client-go v0.23.10
+	open-cluster-management.io/config-policy-controller => github.com/stolostron/config-policy-controller v0.0.0-20230405140446-76ac04a8815f
 	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator v0.0.0-20230131150856-3029aa277b1b
 	open-cluster-management.io/multicloud-operators-subscription => github.com/stolostron/multicloud-operators-subscription v1.2.4-0-20211122-7277a37.0.20220727170504-931d9002a21f
 )
