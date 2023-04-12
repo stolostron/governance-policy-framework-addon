@@ -983,11 +983,6 @@ func (r *PolicyReconciler) emitTemplatePending(
 		eventType = "Normal"
 	}
 
-	// check if the error is already present in the policy status - if so, return early
-	if strings.Contains(getLatestStatusMessage(pol, tIndex), statusMsg) {
-		return
-	}
-
 	// emit the non-compliance event
 	policyComplianceReason := fmt.Sprintf(policyFmtStr, pol.GetNamespace(), tName)
 	r.Recorder.Event(pol, eventType, policyComplianceReason, statusMsg)
@@ -1054,10 +1049,9 @@ func (r *PolicyReconciler) emitTemplateEvent(
 
 // handleSyncSuccess performs common actions that should be run whenever a template is in sync,
 // whether there were changes or not. If no changes occurred, an empty message should be passed in.
-// If the given policy template was in a template-error state (determined by checking the status),
-// then the template object's `status.compliant` field (complianceState) will be reset. When this
-// occurs, the relevant policy controller must re-populate it, and emit a new compliance event for
-// the framework to observe.
+// The template object's `status.compliant` field (complianceState) will be reset if the policy
+// controller needs to create a new compliance event - for example after a template-error is
+// resolved, or when the policy is no longer Pending.
 func (r *PolicyReconciler) handleSyncSuccess(
 	ctx context.Context,
 	pol *policiesv1.Policy,
@@ -1070,8 +1064,21 @@ func (r *PolicyReconciler) handleSyncSuccess(
 		r.Recorder.Event(pol, "Normal", "PolicyTemplateSync", msg)
 	}
 
-	// Only do additional steps if a template-error is the most recent status
-	if !strings.Contains(getLatestStatusMessage(pol, tIndex), "template-error;") {
+	if gv.Group != policiesv1.GroupVersion.Group {
+		// Skip if this isn't an OCM policy
+		return nil
+	}
+
+	latestMessage := getLatestStatusMessage(pol, tIndex)
+	if !(strings.Contains(latestMessage, "template-error;") || strings.Contains(latestMessage, "Pending;")) {
+		// A status reset isn't necessary when the last status is a 'normal' compliant or noncompliant state.
+		return nil
+	}
+
+	// Don't need to check the error because if it's invalid or not set, an empty string is returned. In this case, we
+	// don't want to remove the field value.
+	compliantStatus, _, _ := unstructured.NestedString(template.Object, "status", "compliant")
+	if compliantStatus == "" {
 		return nil
 	}
 
