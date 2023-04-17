@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -70,11 +71,14 @@ type PolicyReconciler struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client.Client
-	DynamicWatcher   depclient.DynamicWatcher
-	Scheme           *runtime.Scheme
-	Config           *rest.Config
-	Recorder         record.EventRecorder
-	ClusterNamespace string
+	DynamicWatcher      depclient.DynamicWatcher
+	Scheme              *runtime.Scheme
+	Config              *rest.Config
+	Recorder            record.EventRecorder
+	ClusterNamespace    string
+	Clientset           *kubernetes.Clientset
+	DisableGkSync       bool
+	createdGkConstraint *bool
 }
 
 // Reconcile reads that state of the cluster for a Policy object and makes changes based on the state read
@@ -124,6 +128,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 	}
 
 	var rMapper meta.RESTMapper
+	var discoveryClient discovery.DiscoveryInterface
 	var dClient dynamic.Interface
 
 	if len(instance.Spec.PolicyTemplates) > 0 {
@@ -141,6 +146,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 		}
 
 		rMapper = restmapper.NewDiscoveryRESTMapper(apigroups)
+		discoveryClient = r.Clientset.Discovery()
 
 		// initialize dynamic client
 		dClient, err = dynamic.NewForConfig(r.Config)

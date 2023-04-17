@@ -387,6 +387,8 @@ func getManager(
 		Config:           mgr.GetConfig(),
 		Recorder:         mgr.GetEventRecorderFor(templatesync.ControllerName),
 		ClusterNamespace: tool.Options.ClusterNamespace,
+		Clientset:        kubernetes.NewForConfigOrDie(mgr.GetConfig()),
+		DisableGkSync:    tool.Options.DisableGkSync,
 	}
 
 	go func() {
