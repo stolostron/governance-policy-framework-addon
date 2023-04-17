@@ -380,6 +380,8 @@ func getManager(
 		os.Exit(1)
 	}
 
+	instanceName, _ := os.Hostname() // on an error, instanceName will be empty, which is ok
+
 	templateReconciler := &templatesync.PolicyReconciler{
 		Client:           mgr.GetClient(),
 		DynamicWatcher:   watcher,
@@ -388,6 +390,7 @@ func getManager(
 		Recorder:         mgr.GetEventRecorderFor(templatesync.ControllerName),
 		ClusterNamespace: tool.Options.ClusterNamespace,
 		Clientset:        kubernetes.NewForConfigOrDie(mgr.GetConfig()),
+		InstanceName:     instanceName,
 		DisableGkSync:    tool.Options.DisableGkSync,
 	}
 

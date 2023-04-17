@@ -77,6 +77,7 @@ type PolicyReconciler struct {
 	Recorder            record.EventRecorder
 	ClusterNamespace    string
 	Clientset           *kubernetes.Clientset
+	InstanceName        string
 	DisableGkSync       bool
 	createdGkConstraint *bool
 }
@@ -210,6 +211,31 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 	// PolicyTemplates is not empty
 	// loop through policy templates
 	for tIndex, policyT := range instance.Spec.PolicyTemplates {
+		// Gather raw object definition from the policy template
+		object, gvk, err := unstructured.UnstructuredJSONScheme.Decode(policyT.ObjectDefinition.Raw, nil, nil)
+		if err != nil {
+			resultError = err
+			errMsg := fmt.Sprintf("Failed to decode policy template with err: %s", err)
+
+			//nolint:errcheck // it will already be requeued for the resultError.
+			r.emitTemplateError(ctx, instance, tIndex, fmt.Sprintf("[template %v]", tIndex), false, errMsg)
+			reqLogger.Error(resultError, "Failed to decode the policy template", "templateIndex", tIndex)
+
+			policyUserErrorsCounter.WithLabelValues(instance.Name, "", "format-error").Inc()
+
+			continue
+		}
+
+		// Special handling booleans, whether this template is:
+		// - ContraintTemplate handled by Gatekeeper
+		// - Cluster scoped
+		isGkConstraintTemplate := gvk.Group == utils.GvkConstraintTemplate.Group &&
+			gvk.Kind == utils.GvkConstraintTemplate.Kind
+		isGkConstraint := gvk.Group == utils.GConstraint
+		isGkObj := isGkConstraintTemplate || isGkConstraint
+		isClusterScoped := isGkObj
+
+		// Handle dependencies that apply to the current policy-template
 		depConflictErr := false
 
 		// use copy of dependencies scoped only to this template
@@ -240,7 +266,9 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 				resultError = fmt.Errorf("dependency on %s has conflicting compliance states", dep.Name)
 				errMsg := fmt.Sprintf("Failed to decode policy template with err: %s", resultError)
 
-				r.emitTemplateError(instance, tIndex, fmt.Sprintf("[template %v]", tIndex), errMsg)
+				//nolint:errcheck // it will already be requeued for the resultError.
+				r.emitTemplateError(ctx, instance, tIndex,
+					fmt.Sprintf("[template %v]", tIndex), isClusterScoped, errMsg)
 				reqLogger.Error(resultError, "Failed to decode the policy template", "templateIndex", tIndex)
 
 				depConflictErr = true
@@ -281,7 +309,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			errMsg := fmt.Sprintf("Failed to get name from policy template at index %v", tIndex)
 			resultError = errors.NewBadRequest(errMsg)
 
-			r.emitTemplateError(instance, tIndex, fmt.Sprintf("[template %v]", tIndex), errMsg)
+			//nolint:errcheck // it will already be requeued for the resultError.
+			r.emitTemplateError(ctx, instance, tIndex, fmt.Sprintf("[template %v]", tIndex), isClusterScoped, errMsg)
 			reqLogger.Error(resultError, "Failed to process the policy template", "templateIndex", tIndex)
 
 			policyUserErrorsCounter.WithLabelValues(instance.Name, "", "format-error").Inc()
@@ -311,7 +340,20 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			resultError = err
 			errMsg := fmt.Sprintf("Mapping not found, please check if you have CRD deployed: %s", err)
 
-			r.emitTemplateError(instance, tIndex, tName, errMsg)
+			if isGkObj && r.DisableGkSync {
+				errMsg = "A Gatekeeper policy-template was provided, but the Gatekeeper integration is disabled"
+			} else if isGkConstraintTemplate {
+				errMsg += "check if Gatekeeper is installed"
+			} else if isGkConstraint {
+				errMsg += "check if the required ConstraintTemplate has been deployed"
+			} else {
+				errMsg += "check if you have the CRD deployed"
+			}
+
+			errMsg += fmt.Sprintf(": %s", err)
+
+			//nolint:errcheck // it will already be requeued for the resultError.
+			r.emitTemplateError(ctx, instance, tIndex, tName, isClusterScoped, errMsg)
 			tLogger.Error(err, "Could not find an API mapping for the object definition",
 				"group", gvk.Group,
 				"version", gvk.Version,
@@ -323,7 +365,50 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			continue
 		}
 
-		// reject if not configuration policy and has templates
+		// Now that there is a mapping, there is a definitive answer whether it's cluster scoped rather
+		// than the previous educated guess based on the provided group and kind.
+		isClusterScoped = !namespaced
+
+		// Check for whether the CRD associated with this policy template has a policy-type=template
+		// label, signaling that it should be synced
+		hasTemplateLabel, err := r.hasPolicyTemplateLabel(ctx, rsrc)
+		if err != nil {
+			reqLogger.Error(err, fmt.Sprintf("Failed to retrieve CRD %s", rsrc.GroupResource().String()))
+
+			policySystemErrorsCounter.WithLabelValues(request.Name, tName, "get-error").Inc()
+
+			// The CRD should exist since it was found in the mapping previously; Requeue this template
+			return reconcile.Result{}, err
+		}
+
+		// If no policy-type=template label AND the GroupKind is not on the explicit allow list, don't
+		// sync this template
+		if !hasTemplateLabel && !utils.IsAllowedPolicy(gvk.GroupKind()) || (isGkObj && r.DisableGkSync) {
+			errMsg := fmt.Sprintf("policy-template kind is not supported: %s", gvk.String())
+
+			if r.DisableGkSync && isGkObj {
+				errMsg = fmt.Sprintf(
+					"not syncing kind %s because the Gatekeeper integration is disabled", gvk.String())
+			}
+
+			err := fmt.Errorf(errMsg)
+
+			resultError = err
+
+			//nolint:errcheck // it will already be requeued for the resultError.
+			r.emitTemplateError(ctx, instance, tIndex, tName, isClusterScoped, errMsg)
+			tLogger.Error(err, "Unsupported policy-template kind found in object definition",
+				"group", gvk.Group,
+				"version", gvk.Version,
+				"kind", gvk.Kind,
+			)
+
+			policyUserErrorsCounter.WithLabelValues(instance.Name, tName, "crd-error").Inc()
+
+			continue
+		}
+
+		// reject if not configuration policy and has template strings
 		if gvk.Kind != "ConfigurationPolicy" {
 			// if not configuration policies ,do a simple check for templates {{hub and reject
 			// only checking for hub and not {{ as they could be valid cases where they are valid chars.
@@ -331,7 +416,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 				errMsg := fmt.Sprintf("Templates are not supported for kind : %s", gvk.Kind)
 				resultError = errors.NewBadRequest(errMsg)
 
-				r.emitTemplateError(instance, tIndex, tName, errMsg)
+				//nolint:errcheck // it will already be requeued for the resultError.
+				r.emitTemplateError(ctx, instance, tIndex, tName, isClusterScoped, errMsg)
 				tLogger.Error(resultError, "Failed to process the policy template")
 
 				policyUserErrorsCounter.WithLabelValues(instance.Name, tName, "format-error").Inc()
@@ -351,7 +437,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			resultError = err
 			errMsg := fmt.Sprintf("Failed to unmarshal the policy template: %s", err)
 
-			r.emitTemplateError(instance, tIndex, tName, errMsg)
+			//nolint:errcheck // it will already be requeued for the resultError.
+			r.emitTemplateError(ctx, instance, tIndex, tName, isClusterScoped, errMsg)
 			tLogger.Error(resultError, "Failed to unmarshal the policy template")
 
 			policySystemErrorsCounter.WithLabelValues(instance.Name, tName, "unmarshal-error").Inc()
@@ -363,7 +450,14 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 		if err != nil {
 			if len(dependencyFailures) > 0 {
 				// template must be pending, do not create it
-				r.emitTemplatePending(instance, tIndex, tName, generatePendingMsg(dependencyFailures))
+				emitErr := r.emitTemplatePending(ctx, instance, tIndex, tName, isClusterScoped,
+					generatePendingMsg(dependencyFailures))
+				if emitErr != nil {
+					resultError = emitErr
+
+					continue
+				}
+
 				tLogger.Info("Dependencies were not satisfied for the policy template",
 					"namespace", instance.GetNamespace(),
 					"kind", gvk.Kind,
@@ -419,7 +513,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 					resultError = err
 					errMsg := fmt.Sprintf("Failed to create policy template: %s", err)
 
-					r.emitTemplateError(instance, tIndex, tName, errMsg)
+					//nolint:errcheck // it will already be requeued for the resultError.
+					r.emitTemplateError(ctx, instance, tIndex, tName, isClusterScoped, errMsg)
 					tLogger.Error(resultError, "Failed to create policy template")
 
 					policySystemErrorsCounter.WithLabelValues(instance.Name, tName, "create-error").Inc()
@@ -430,7 +525,30 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 				successMsg := fmt.Sprintf("Policy template %s created successfully", tName)
 				tLogger.Info("Policy template created successfully", "PolicyTemplateName", tName)
 
-				err = r.handleSyncSuccess(ctx, instance, tIndex, tName, successMsg, res)
+				tLogger.Info("Policy template created successfully")
+
+				// Handle clusterwide objects
+				if isClusterScoped {
+					addFinalizer = true
+
+					tLogger.V(2).Info("Finalizer required for " + gvk.Kind)
+
+					if isGkObj {
+						r.setCreatedGkConstraint(true)
+					}
+					// The ConstraintTemplate does not generate status, so we need to generate an event for it.
+					if isGkConstraintTemplate {
+						tLogger.Info("Emitting status event for " + gvk.Kind)
+						msg := fmt.Sprintf("%s %s was created successfully", gvk.Kind, tName)
+
+						emitErr := r.emitTemplateSuccess(ctx, instance, tIndex, tName, isClusterScoped, msg)
+						if emitErr != nil {
+							resultError = emitErr
+						}
+					}
+				}
+
+				err = r.handleSyncSuccess(ctx, instance, tIndex, tName, successMsg, res, gvk.GroupVersion(), eObject)
 				if err != nil {
 					resultError = err
 					tLogger.Error(resultError, "Error after creating template (will requeue)")
@@ -444,7 +562,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 				resultError = err
 				errMsg := fmt.Sprintf("Failed to get the object in the policy template: %s", err)
 
-				r.emitTemplateError(instance, tIndex, tName, errMsg)
+				//nolint:errcheck // it will already be requeued for the resultError.
+				r.emitTemplateError(ctx, instance, tIndex, tName, isClusterScoped, errMsg)
 				tLogger.Error(err, "Failed to get the object in the policy template",
 					"namespace", instance.GetNamespace(),
 					"kind", gvk.Kind,
@@ -458,11 +577,16 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 		if len(dependencyFailures) > 0 {
 			// template must be pending, need to delete it and error
-			r.emitTemplatePending(instance, tIndex, tName, generatePendingMsg(dependencyFailures))
 			tLogger.Info("Dependencies were not satisfied for the policy template",
 				"namespace", instance.GetNamespace(),
 				"kind", gvk.Kind,
 			)
+
+			emitErr := r.emitTemplatePending(ctx, instance, tIndex, tName,
+				isClusterScoped, generatePendingMsg(dependencyFailures))
+			if emitErr != nil {
+				resultError = err
+			}
 
 			err = res.Delete(ctx, tName, metav1.DeleteOptions{})
 			if err != nil {
@@ -526,7 +650,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 			resultError = errors.NewBadRequest(errMsg)
 
-			r.emitTemplateError(instance, tIndex, tName, errMsg)
+			//nolint:errcheck // it will already be requeued for the resultError.
+			r.emitTemplateError(ctx, instance, tIndex, tName, isClusterScoped, errMsg)
 			tLogger.Error(resultError, "Failed to create the policy template")
 
 			policyUserErrorsCounter.WithLabelValues(instance.Name, tName, "format-error").Inc()
@@ -560,7 +685,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 				resultError = err
 				errMsg := fmt.Sprintf("Failed to update policy template %s: %s", tName, err)
 
-				r.emitTemplateError(instance, tIndex, tName, errMsg)
+				//nolint:errcheck // it will already be requeued for the resultError.
+				r.emitTemplateError(ctx, instance, tIndex, tName, isClusterScoped, errMsg)
 				tLogger.Error(err, "Failed to update the policy template")
 
 				policySystemErrorsCounter.WithLabelValues(instance.Name, tName, "patch-error").Inc()
@@ -570,7 +696,28 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 			successMsg := fmt.Sprintf("Policy template %s was updated successfully", tName)
 
-			err = r.handleSyncSuccess(ctx, instance, tIndex, tName, successMsg, res)
+			// Handle cluster scoped objects
+			if isClusterScoped {
+				addFinalizer = true
+
+				reqLogger.V(2).Info("Finalizer required for " + gvk.Kind)
+
+				if isGkObj {
+					r.setCreatedGkConstraint(true)
+				}
+				// The ConstraintTemplate does not generate status, so we need to generate an event for it
+				if isGkConstraintTemplate {
+					tLogger.Info("Emitting status event for " + gvk.Kind)
+					msg := fmt.Sprintf("%s %s was updated successfully", gvk.Kind, tName)
+
+					emitErr := r.emitTemplateSuccess(ctx, instance, tIndex, tName, isClusterScoped, msg)
+					if emitErr != nil {
+						resultError = emitErr
+					}
+				}
+			}
+
+			err = r.handleSyncSuccess(ctx, instance, tIndex, tName, successMsg, res, gvk.GroupVersion(), eObject)
 			if err != nil {
 				resultError = err
 				tLogger.Error(resultError, "Error after updating template (will requeue)")
@@ -791,28 +938,44 @@ func overrideRemediationAction(instance *policiesv1.Policy, tObjectUnstructured 
 	}
 }
 
+// emitTemplateSuccess performs actions that ensure correct reporting of template success in the
+// policy framework. If the policy's status already reflects the current message, then no actions
+// are taken.
+func (r *PolicyReconciler) emitTemplateSuccess(
+	ctx context.Context, pol *policiesv1.Policy, tIndex int, tName string, clusterScoped bool, msg string,
+) error {
+	err := r.emitTemplateEvent(ctx, pol, tIndex, tName, clusterScoped, "Normal", "Compliant; ", msg)
+	if err != nil {
+		tlog := log.WithValues("Policy.Namespace", pol.Namespace, "Policy.Name", pol.Name, "template", tName)
+		tlog.Error(err, "Failed to emit template success event")
+	}
+
+	return err
+}
+
 // emitTemplateError performs actions that ensure correct reporting of template errors in the
 // policy framework. If the policy's status already reflects the current error, then no actions
 // are taken.
-func (r *PolicyReconciler) emitTemplateError(pol *policiesv1.Policy, tIndex int, tName, errMsg string) {
-	// check if the error is already present in the policy status - if so, return early
-	if strings.Contains(getLatestStatusMessage(pol, tIndex), errMsg) {
-		return
+func (r *PolicyReconciler) emitTemplateError(
+	ctx context.Context, pol *policiesv1.Policy, tIndex int, tName string, clusterScoped bool, errMsg string,
+) error {
+	err := r.emitTemplateEvent(ctx, pol, tIndex, tName, clusterScoped,
+		"Warning", "NonCompliant; template-error; ", errMsg)
+	if err != nil {
+		tlog := log.WithValues("Policy.Namespace", pol.Namespace, "Policy.Name", pol.Name, "template", tName)
+		tlog.Error(err, "Failed to emit template error event")
 	}
 
-	// emit the non-compliance event
-	policyComplianceReason := fmt.Sprintf(policyFmtStr, pol.GetNamespace(), tName)
-	r.Recorder.Event(pol, "Warning", policyComplianceReason, "NonCompliant; template-error; "+errMsg)
-
-	// emit an informational event
-	r.Recorder.Event(pol, "Warning", "PolicyTemplateSync", errMsg)
+	return err
 }
 
 // emitTemplatePending performs actions that ensure correct reporting of pending dependencies in the
 // policy framework. If the policy's status already reflects the current status, then no actions
 // are taken.
-func (r *PolicyReconciler) emitTemplatePending(pol *policiesv1.Policy, tIndex int, tName, msg string) {
-	statusMsg := "Pending; " + msg
+func (r *PolicyReconciler) emitTemplatePending(
+	ctx context.Context, pol *policiesv1.Policy, tIndex int, tName string, clusterScoped bool, msg string,
+) error {
+	msgMeta := "Pending; "
 	eventType := "Warning"
 
 	if pol.Spec.PolicyTemplates[tIndex].IgnorePending {
@@ -831,6 +994,62 @@ func (r *PolicyReconciler) emitTemplatePending(pol *policiesv1.Policy, tIndex in
 
 	// emit an informational event
 	r.Recorder.Event(pol, eventType, "PolicyTemplateSync", statusMsg)
+	err := r.emitTemplateEvent(ctx, pol, tIndex, tName, clusterScoped, eventType, msgMeta, msg)
+	if err != nil {
+		tlog := log.WithValues("Policy.Namespace", pol.Namespace, "Policy.Name", pol.Name, "template", tName)
+		tlog.Error(err, "Failed to emit template pending event")
+	}
+
+	return err
+}
+
+// emitTemplateEvent performs actions that ensure correct reporting of template sync events. If the
+// policy's status already reflects the current status, then no actions are taken. The msgMeta and
+// msg are concatenated without spaces, so any spacing should be included inside the msgMeta string.
+func (r *PolicyReconciler) emitTemplateEvent(
+	ctx context.Context, pol *policiesv1.Policy, tIndex int, tName string, clusterScoped bool,
+	eventType string, msgMeta string, msg string,
+) error {
+	// check if the error is already present in the policy status - if so, return early
+	if strings.Contains(getLatestStatusMessage(pol, tIndex), msgMeta+msg) {
+		return nil
+	}
+
+	// emit an informational event
+	r.Recorder.Event(pol, eventType, "PolicyTemplateSync", msg)
+
+	// emit the compliance event
+	var policyComplianceReason string
+	if clusterScoped {
+		policyComplianceReason = utils.EventReason("", tName)
+	} else {
+		policyComplianceReason = utils.EventReason(pol.GetNamespace(), tName)
+	}
+
+	sender := utils.ComplianceEventSender{
+		ClusterNamespace: pol.Namespace,
+		InstanceName:     r.InstanceName,
+		ClientSet:        r.Clientset,
+		ControllerName:   ControllerName,
+	}
+
+	ownerref := metav1.OwnerReference{
+		APIVersion: pol.APIVersion,
+		Kind:       pol.Kind,
+		Name:       pol.Name,
+		UID:        pol.UID,
+	}
+
+	var compState policiesv1.ComplianceState
+	if strings.HasPrefix(msgMeta, "Compliant") {
+		compState = policiesv1.Compliant
+	} else if strings.HasPrefix(msgMeta, "NonCompliant") {
+		compState = policiesv1.NonCompliant
+	} else if strings.HasPrefix(msgMeta, "Pending") {
+		compState = policiesv1.Pending
+	}
+
+	return sender.SendEvent(ctx, nil, ownerref, policyComplianceReason, msgMeta+msg, compState)
 }
 
 // handleSyncSuccess performs common actions that should be run whenever a template is in sync,
