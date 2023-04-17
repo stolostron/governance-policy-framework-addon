@@ -7,6 +7,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"open-cluster-management.io/governance-policy-propagator/test/utils"
+
+	fwutils "open-cluster-management.io/governance-policy-framework-addon/controllers/utils"
 )
 
 // Helper function to create events
@@ -19,11 +21,33 @@ func generateEventOnPolicy(plcName string, cfgPlcNamespacedName string, eventTyp
 		true,
 		defaultTimeoutSeconds)
 	Expect(managedPlc).NotTo(BeNil())
-	managedRecorder.Event(
-		managedPlc,
-		eventType,
-		"policy: "+cfgPlcNamespacedName,
-		msg)
+
+	configPlc := unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": gvrConfigurationPolicy.GroupVersion().String(),
+			"kind":       "ConfigurationPolicy",
+			"metadata": map[string]interface{}{
+				"name":      cfgPlcName,
+				"namespace": clusterNamespace,
+				"uid":       uuid.NewUUID(),
+			},
+		},
+	}
+
+	err := managedEventSender.SendEvent(
+		context.TODO(),
+		&configPlc,
+		metav1.OwnerReference{
+			APIVersion: managedPlc.GetAPIVersion(),
+			Kind:       managedPlc.GetKind(),
+			Name:       managedPlc.GetName(),
+			UID:        managedPlc.GetUID(),
+		},
+		fwutils.EventReason(clusterNamespace, cfgPlcName),
+		msg,
+		policiesv1.ComplianceState(complianceState),
+	)
+	Expect(err).To(BeNil())
 }
 
 var _ = Describe("Test dependency logic in template sync", Ordered, func() {
