@@ -21,7 +21,7 @@ var _ = Describe("Test owner reference recovery", func() {
 	BeforeEach(func() {
 		By("Creating a policy on the hub in ns:" + clusterNamespaceOnHub)
 		_, err := kubectlHub("apply", "-f", case16PolicyYaml, "-n", clusterNamespaceOnHub)
-		Expect(err).Should(BeNil())
+		Expect(err).ShouldNot(HaveOccurred())
 		plc := utils.GetWithTimeout(clientManagedDynamic, gvrPolicy, case16PolicyName, clusterNamespace, true,
 			defaultTimeoutSeconds)
 		Expect(plc).NotTo(BeNil())
@@ -29,15 +29,18 @@ var _ = Describe("Test owner reference recovery", func() {
 	AfterEach(func() {
 		By("Deleting a policy on the hub in ns:" + clusterNamespaceOnHub)
 		_, err := kubectlHub("delete", "-f", case16PolicyYaml, "-n", clusterNamespaceOnHub, "--ignore-not-found=true")
-		Expect(err).To(BeNil())
+		Expect(err).ToNot(HaveOccurred())
 		opt := metav1.ListOptions{}
 		utils.ListWithTimeout(clientManagedDynamic, gvrPolicy, opt, 0, true, defaultTimeoutSeconds)
+		By("clean up all events")
+		_, err = kubectlManaged("delete", "events", "-n", clusterNamespace, "--all")
+		Expect(err).ShouldNot(HaveOccurred())
 	})
 	It("Should restore owner references that are edited out of the child config policy", func() {
 		By("Patching config policy to remove owner references")
 		_, err := kubectlManaged("patch", "configurationpolicy", case16ConfigPolicyName, "-n", clusterNamespace,
 			"--type", "merge", "--patch-file", case16PatchConfigPolicyYaml)
-		Expect(err).Should(BeNil())
+		Expect(err).ShouldNot(HaveOccurred())
 
 		Eventually(func() interface{} {
 			configPlc := utils.GetWithTimeout(clientManagedDynamic, gvrConfigurationPolicy,

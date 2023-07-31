@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-logr/zapr"
 	"github.com/spf13/pflag"
@@ -548,7 +549,11 @@ func startHealthProxy(ctx context.Context, wg *sync.WaitGroup, addresses ...stri
 					return
 				}
 
-				defer resp.Body.Close()
+				defer func() {
+					if err := resp.Body.Close(); err != nil {
+						log.Info(fmt.Sprintf("Error closing %s response reader: %s\n", endpoint, err))
+					}
+				}()
 
 				if resp.StatusCode != http.StatusOK {
 					body, err := io.ReadAll(resp.Body)
@@ -571,7 +576,10 @@ func startHealthProxy(ctx context.Context, wg *sync.WaitGroup, addresses ...stri
 		})
 	}
 
-	server := &http.Server{Addr: tool.Options.ProbeAddr}
+	server := &http.Server{
+		ReadHeaderTimeout: 10 * time.Second,
+		Addr:              tool.Options.ProbeAddr,
+	}
 
 	// Once the input context is done, shutdown the server
 	go func() {
@@ -580,7 +588,7 @@ func startHealthProxy(ctx context.Context, wg *sync.WaitGroup, addresses ...stri
 		log.Info("Stopping the health endpoint proxy")
 
 		// Don't pass the already closed context or else the clean up won't happen
-		// nolint: contextcheck
+		//nolint:contextcheck
 		err := server.Shutdown(context.TODO())
 		if err != nil {
 			log.Error(err, "Failed to shutdown the health endpoints")

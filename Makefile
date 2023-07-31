@@ -125,7 +125,7 @@ check: lint
 
 .PHONY: lint-dependencies
 lint-dependencies:
-	$(call go-get-tool,github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.2)
+	$(call go-get-tool,github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2)
 
 # All available linters: lint-dockerfiles lint-scripts lint-yaml lint-copyright-banner lint-go lint-python lint-helm lint-markdown lint-sass lint-typescript lint-protos
 # Default value will run all linters, override these make target with your requirements:
@@ -170,7 +170,7 @@ kubebuilder-dependencies: $(LOCAL_BIN)
 
 .PHONY: gosec
 gosec:
-	$(call go-get-tool,github.com/securego/gosec/v2/cmd/gosec@v2.9.6)
+	$(call go-get-tool,github.com/securego/gosec/v2/cmd/gosec@v2.15.0)
 
 .PHONY: gosec-scan
 gosec-scan: gosec

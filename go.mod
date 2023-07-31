@@ -1,6 +1,6 @@
 module open-cluster-management.io/governance-policy-framework-addon
 
-go 1.19
+go 1.20
 
 require (
 	github.com/go-logr/logr v1.2.2
@@ -12,6 +12,7 @@ require (
 	github.com/stolostron/go-log-utils v0.1.1
 	github.com/stolostron/kubernetes-dependency-watches v0.1.1
 	k8s.io/api v0.23.10
+	k8s.io/apiextensions-apiserver v0.23.5
 	k8s.io/apimachinery v0.23.10
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog/v2 v2.80.0
@@ -73,7 +74,6 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.23.5 // indirect
 	k8s.io/apiserver v0.23.5 // indirect
 	k8s.io/component-base v0.23.5 // indirect
 	k8s.io/klog v1.0.0 // indirect
