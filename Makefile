@@ -234,6 +234,17 @@ kind-bootstrap-cluster: kind-create-cluster install-crds kind-deploy-controller 
 .PHONY: kind-bootstrap-cluster-dev
 kind-bootstrap-cluster-dev: kind-create-cluster install-crds install-resources
 
+
+HOSTED ?= none
+
+.PHONY: kind-deploy-controller-dev
+kind-deploy-controller-dev: 
+	if [ "$(HOSTED)" = "hosted" ]; then\
+		$(MAKE) kind-deploy-controller-dev-addon ;\
+	else\
+		$(MAKE) kind-deploy-controller-dev-normal ;\
+	fi
+
 .PHONY: kind-deploy-controller
 kind-deploy-controller:
 	@echo installing $(IMG)
@@ -241,14 +252,22 @@ kind-deploy-controller:
 	-kubectl create secret -n $(KIND_NAMESPACE) generic hub-kubeconfig --from-file=kubeconfig=$(HUB_CONFIG_INTERNAL) --kubeconfig=$(MANAGED_CONFIG)
 	kubectl apply -f deploy/operator.yaml -n $(KIND_NAMESPACE) --kubeconfig=$(MANAGED_CONFIG)
 
-.PHONY: kind-deploy-controller-dev
-kind-deploy-controller-dev: kind-deploy-controller
+.PHONY: kind-deploy-controller-dev-normal
+kind-deploy-controller-dev-normal: kind-deploy-controller
 	@echo Pushing image to KinD cluster
 	kind load docker-image $(REGISTRY)/$(IMG):$(TAG) --name $(KIND_NAME)
 	@echo "Patch deployment image"
 	kubectl patch deployment $(IMG) -n $(KIND_NAMESPACE) -p "{\"spec\":{\"template\":{\"spec\":{\"containers\":[{\"name\":\"$(IMG)\",\"imagePullPolicy\":\"Never\"}]}}}}" --kubeconfig=$(MANAGED_CONFIG)
 	kubectl patch deployment $(IMG) -n $(KIND_NAMESPACE) -p "{\"spec\":{\"template\":{\"spec\":{\"containers\":[{\"name\":\"$(IMG)\",\"image\":\"$(REGISTRY)/$(IMG):$(TAG)\"}]}}}}" --kubeconfig=$(MANAGED_CONFIG)
 	kubectl rollout status -n $(KIND_NAMESPACE) deployment $(IMG) --timeout=180s --kubeconfig=$(MANAGED_CONFIG)
+
+.PHONY: kind-deploy-controller-dev-addon
+kind-deploy-controller-dev-addon:
+	@echo Hosted mode test
+	kind load docker-image $(REGISTRY)/$(IMG):$(TAG) --name $(KIND_NAME)
+	kubectl annotate -n $(subst -hosted,,$(KIND_NAMESPACE)) --overwrite managedclusteraddon governance-policy-framework\
+		addon.open-cluster-management.io/values='{"global":{"imagePullPolicy": "Never", "imageOverrides":{"governance_policy_framework_addon": "$(REGISTRY)/$(IMG):$(TAG)"}}}'
+
 
 .PHONY: kind-create-cluster
 kind-create-cluster:
