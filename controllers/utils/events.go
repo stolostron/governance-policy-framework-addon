@@ -38,9 +38,6 @@ func (c *ComplianceEventSender) SendEvent(
 	compliance policyv1.ComplianceState,
 ) error {
 	msg = string(compliance) + "; " + msg
-	if len([]rune(msg)) > 1024 {
-		msg = string([]rune(msg)[:1021]) + "..."
-	}
 
 	now := time.Now()
 
@@ -66,7 +63,6 @@ func (c *ComplianceEventSender) SendEvent(
 		FirstTimestamp:      metav1.NewTime(now),
 		LastTimestamp:       metav1.NewTime(now),
 		Count:               1,
-		EventTime:           metav1.NewMicroTime(now),
 		Action:              "ComplianceStateUpdate",
 		ReportingController: c.ControllerName,
 		ReportingInstance:   c.InstanceName,
