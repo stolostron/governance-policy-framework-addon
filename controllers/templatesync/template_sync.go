@@ -75,6 +75,7 @@ type PolicyReconciler struct {
 	Config           *rest.Config
 	Recorder         record.EventRecorder
 	ClusterNamespace string
+	Clientset        *kubernetes.Clientset
 }
 
 // Reconcile reads that state of the cluster for a Policy object and makes changes based on the state read
@@ -128,8 +129,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 	if len(instance.Spec.PolicyTemplates) > 0 {
 		// initialize restmapper
-		clientset := kubernetes.NewForConfigOrDie(r.Config)
-		dd := clientset.Discovery()
+		dd := r.Clientset.Discovery()
 
 		apigroups, err := restmapper.GetAPIGroupResources(dd)
 		if err != nil {
