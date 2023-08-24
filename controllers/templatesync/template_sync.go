@@ -435,7 +435,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 				successMsg := fmt.Sprintf("Policy template %s created successfully", tName)
 				tLogger.Info("Policy template created successfully", "PolicyTemplateName", tName)
 
-				err = r.handleSyncSuccess(ctx, instance, tIndex, tName, successMsg, res)
+				err = r.handleSyncSuccess(ctx, instance, tIndex, tName, successMsg, res, eObject)
 				if err != nil {
 					resultError = err
 					tLogger.Error(resultError, "Error after creating template (will requeue)")
@@ -581,7 +581,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 			successMsg := fmt.Sprintf("Policy template %s was updated successfully", tName)
 
-			err = r.handleSyncSuccess(ctx, instance, tIndex, tName, successMsg, res)
+			err = r.handleSyncSuccess(ctx, instance, tIndex, tName, successMsg, res, eObject)
 			if err != nil {
 				resultError = err
 				tLogger.Error(resultError, "Error after updating template (will requeue)")
@@ -591,7 +591,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 			tLogger.Info("Existing object has been updated")
 		} else {
-			err = r.handleSyncSuccess(ctx, instance, tIndex, tName, "", res)
+			err = r.handleSyncSuccess(ctx, instance, tIndex, tName, "", res, eObject)
 			if err != nil {
 				resultError = err
 				tLogger.Error(resultError, "Error after confirming template matches (will requeue)")
@@ -892,10 +892,9 @@ func (r *PolicyReconciler) emitTemplateEvent(
 
 // handleSyncSuccess performs common actions that should be run whenever a template is in sync,
 // whether there were changes or not. If no changes occurred, an empty message should be passed in.
-// If the given policy template was in a template-error state (determined by checking the status),
-// then the template object's `status.compliant` field (complianceState) will be reset. When this
-// occurs, the relevant policy controller must re-populate it, and emit a new compliance event for
-// the framework to observe.
+// The template object's `status.compliant` field (complianceState) will be reset if the policy
+// controller needs to create a new compliance event - for example after a template-error is
+// resolved, or when the policy is no longer Pending.
 func (r *PolicyReconciler) handleSyncSuccess(
 	ctx context.Context,
 	pol *policiesv1.Policy,
@@ -903,13 +902,22 @@ func (r *PolicyReconciler) handleSyncSuccess(
 	tName string,
 	msg string,
 	resInt dynamic.ResourceInterface,
+	template *unstructured.Unstructured,
 ) error {
 	if msg != "" {
 		r.Recorder.Event(pol, "Normal", "PolicyTemplateSync", msg)
 	}
 
-	// Only do additional steps if a template-error is the most recent status
-	if !strings.Contains(getLatestStatusMessage(pol, tIndex), "template-error;") {
+	latestMessage := getLatestStatusMessage(pol, tIndex)
+	if !(strings.Contains(latestMessage, "template-error;") || strings.Contains(latestMessage, "Pending;")) {
+		// A status reset isn't necessary when the last status is a 'normal' compliant or noncompliant state.
+		return nil
+	}
+
+	// Don't need to check the error because if it's invalid or not set, an empty string is returned. In this case, we
+	// don't want to remove the field value.
+	compliantStatus, _, _ := unstructured.NestedString(template.Object, "status", "compliant")
+	if compliantStatus == "" {
 		return nil
 	}
 
