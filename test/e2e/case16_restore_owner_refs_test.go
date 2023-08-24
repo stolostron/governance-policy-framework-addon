@@ -25,6 +25,9 @@ var _ = Describe("Test owner reference recovery", func() {
 		plc := utils.GetWithTimeout(clientManagedDynamic, gvrPolicy, case16PolicyName, clusterNamespace, true,
 			defaultTimeoutSeconds)
 		Expect(plc).NotTo(BeNil())
+		cfgpol := utils.GetWithTimeout(clientManagedDynamic, gvrConfigurationPolicy, case16ConfigPolicyName,
+			clusterNamespace, true, defaultTimeoutSeconds)
+		Expect(cfgpol).NotTo(BeNil())
 	})
 	AfterEach(func() {
 		By("Deleting a policy on the hub in ns:" + clusterNamespaceOnHub)
