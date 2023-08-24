@@ -37,11 +37,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	"open-cluster-management.io/governance-policy-framework-addon/controllers/utils"
 )
 
 const (
 	ControllerName    string = "policy-template-sync"
-	policyFmtStr      string = "policy: %s/%s"
 	PolicyTypeLabel   string = "policy.open-cluster-management.io/policy-type"
 	parentPolicyLabel string = "policy.open-cluster-management.io/policy"
 )
@@ -76,6 +77,7 @@ type PolicyReconciler struct {
 	Recorder         record.EventRecorder
 	ClusterNamespace string
 	Clientset        *kubernetes.Clientset
+	InstanceName     string
 }
 
 // Reconcile reads that state of the cluster for a Policy object and makes changes based on the state read
@@ -234,7 +236,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 				resultError = fmt.Errorf("dependency on %s has conflicting compliance states", dep.Name)
 				errMsg := fmt.Sprintf("Failed to decode policy template with err: %s", resultError)
 
-				r.emitTemplateError(instance, tIndex, fmt.Sprintf("[template %v]", tIndex), errMsg)
+				_ = r.emitTemplateError(ctx, instance, tIndex, fmt.Sprintf("[template %v]", tIndex), errMsg)
 				reqLogger.Error(resultError, "Failed to decode the policy template", "templateIndex", tIndex)
 
 				depConflictErr = true
@@ -258,7 +260,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			resultError = err
 			errMsg := fmt.Sprintf("Failed to decode policy template with err: %s", err)
 
-			r.emitTemplateError(instance, tIndex, fmt.Sprintf("[template %v]", tIndex), errMsg)
+			_ = r.emitTemplateError(ctx, instance, tIndex, fmt.Sprintf("[template %v]", tIndex), errMsg)
 			reqLogger.Error(resultError, "Failed to decode the policy template", "templateIndex", tIndex)
 
 			policyUserErrorsCounter.WithLabelValues(instance.Name, "", "format-error").Inc()
@@ -275,7 +277,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			errMsg := fmt.Sprintf("Failed to get name from policy template at index %v", tIndex)
 			resultError = errors.NewBadRequest(errMsg)
 
-			r.emitTemplateError(instance, tIndex, fmt.Sprintf("[template %v]", tIndex), errMsg)
+			_ = r.emitTemplateError(ctx, instance, tIndex, fmt.Sprintf("[template %v]", tIndex), errMsg)
 			reqLogger.Error(resultError, "Failed to process the policy template", "templateIndex", tIndex)
 
 			policyUserErrorsCounter.WithLabelValues(instance.Name, "", "format-error").Inc()
@@ -305,7 +307,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			resultError = err
 			errMsg := fmt.Sprintf("Mapping not found, please check if you have CRD deployed: %s", err)
 
-			r.emitTemplateError(instance, tIndex, tName, errMsg)
+			_ = r.emitTemplateError(ctx, instance, tIndex, tName, errMsg)
 			tLogger.Error(err, "Could not find an API mapping for the object definition",
 				"group", gvk.Group,
 				"version", gvk.Version,
@@ -325,7 +327,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 				errMsg := fmt.Sprintf("Templates are not supported for kind : %s", gvk.Kind)
 				resultError = errors.NewBadRequest(errMsg)
 
-				r.emitTemplateError(instance, tIndex, tName, errMsg)
+				_ = r.emitTemplateError(ctx, instance, tIndex, tName, errMsg)
+
 				tLogger.Error(resultError, "Failed to process the policy template")
 
 				policyUserErrorsCounter.WithLabelValues(instance.Name, tName, "format-error").Inc()
@@ -345,7 +348,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			resultError = err
 			errMsg := fmt.Sprintf("Failed to unmarshal the policy template: %s", err)
 
-			r.emitTemplateError(instance, tIndex, tName, errMsg)
+			_ = r.emitTemplateError(ctx, instance, tIndex, tName, errMsg)
+
 			tLogger.Error(resultError, "Failed to unmarshal the policy template")
 
 			policySystemErrorsCounter.WithLabelValues(instance.Name, tName, "unmarshal-error").Inc()
@@ -357,7 +361,13 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 		if err != nil {
 			if len(dependencyFailures) > 0 {
 				// template must be pending, do not create it
-				r.emitTemplatePending(instance, tIndex, tName, generatePendingMsg(dependencyFailures))
+				emitErr := r.emitTemplatePending(ctx, instance, tIndex, tName, generatePendingMsg(dependencyFailures))
+				if emitErr != nil {
+					resultError = emitErr
+
+					continue
+				}
+
 				tLogger.Info("Dependencies were not satisfied for the policy template",
 					"namespace", instance.GetNamespace(),
 					"kind", gvk.Kind,
@@ -397,7 +407,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 				overrideRemediationAction(instance, tObjectUnstructured)
 
-				_, err = res.Create(ctx, tObjectUnstructured, metav1.CreateOptions{})
+				eObject, err = res.Create(ctx, tObjectUnstructured, metav1.CreateOptions{})
 				if err != nil {
 					multiTemplateRegExp := regexp.MustCompile(
 						`spec" must validate one and only one schema \(oneOf\)\. Found 2 valid alternatives$`,
@@ -413,7 +423,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 					resultError = err
 					errMsg := fmt.Sprintf("Failed to create policy template: %s", err)
 
-					r.emitTemplateError(instance, tIndex, tName, errMsg)
+					_ = r.emitTemplateError(ctx, instance, tIndex, tName, errMsg)
+
 					tLogger.Error(resultError, "Failed to create policy template")
 
 					policySystemErrorsCounter.WithLabelValues(instance.Name, tName, "create-error").Inc()
@@ -439,7 +450,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			resultError = err
 			errMsg := fmt.Sprintf("Failed to get the object in the policy template: %s", err)
 
-			r.emitTemplateError(instance, tIndex, tName, errMsg)
+			_ = r.emitTemplateError(ctx, instance, tIndex, tName, errMsg)
 			tLogger.Error(err, "Failed to get the object in the policy template",
 				"namespace", instance.GetNamespace(),
 				"kind", gvk.Kind,
@@ -452,7 +463,11 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 		if len(dependencyFailures) > 0 {
 			// template must be pending, need to delete it and error
-			r.emitTemplatePending(instance, tIndex, tName, generatePendingMsg(dependencyFailures))
+			emitErr := r.emitTemplatePending(ctx, instance, tIndex, tName, generatePendingMsg(dependencyFailures))
+			if emitErr != nil {
+				resultError = emitErr
+			}
+
 			tLogger.Info("Dependencies were not satisfied for the policy template",
 				"namespace", instance.GetNamespace(),
 				"kind", gvk.Kind,
@@ -520,7 +535,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 			resultError = errors.NewBadRequest(errMsg)
 
-			r.emitTemplateError(instance, tIndex, tName, errMsg)
+			_ = r.emitTemplateError(ctx, instance, tIndex, tName, errMsg)
+
 			tLogger.Error(resultError, "Failed to create the policy template")
 
 			policyUserErrorsCounter.WithLabelValues(instance.Name, tName, "format-error").Inc()
@@ -554,7 +570,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 				resultError = err
 				errMsg := fmt.Sprintf("Failed to update policy template %s: %s", tName, err)
 
-				r.emitTemplateError(instance, tIndex, tName, errMsg)
+				_ = r.emitTemplateError(ctx, instance, tIndex, tName, errMsg)
+
 				tLogger.Error(err, "Failed to update the policy template")
 
 				policySystemErrorsCounter.WithLabelValues(instance.Name, tName, "patch-error").Inc()
@@ -788,43 +805,89 @@ func overrideRemediationAction(instance *policiesv1.Policy, tObjectUnstructured 
 // emitTemplateError performs actions that ensure correct reporting of template errors in the
 // policy framework. If the policy's status already reflects the current error, then no actions
 // are taken.
-func (r *PolicyReconciler) emitTemplateError(pol *policiesv1.Policy, tIndex int, tName, errMsg string) {
-	// check if the error is already present in the policy status - if so, return early
-	if strings.Contains(getLatestStatusMessage(pol, tIndex), errMsg) {
-		return
+func (r *PolicyReconciler) emitTemplateError(
+	ctx context.Context, pol *policiesv1.Policy, tIndex int, tName string, errMsg string,
+) error {
+	err := r.emitTemplateEvent(ctx, pol, tIndex, tName, false, "Warning", "NonCompliant; template-error; ", errMsg)
+	if err != nil {
+		tlog := log.WithValues("Policy.Namespace", pol.Namespace, "Policy.Name", pol.Name, "template", tName)
+		tlog.Error(err, "Failed to emit template error event")
 	}
 
-	// emit the non-compliance event
-	policyComplianceReason := fmt.Sprintf(policyFmtStr, pol.GetNamespace(), tName)
-	r.Recorder.Event(pol, "Warning", policyComplianceReason, "NonCompliant; template-error; "+errMsg)
-
-	// emit an informational event
-	r.Recorder.Event(pol, "Warning", "PolicyTemplateSync", errMsg)
+	return err
 }
 
 // emitTemplatePending performs actions that ensure correct reporting of pending dependencies in the
 // policy framework. If the policy's status already reflects the current status, then no actions
 // are taken.
-func (r *PolicyReconciler) emitTemplatePending(pol *policiesv1.Policy, tIndex int, tName, msg string) {
-	statusMsg := "Pending; " + msg
+func (r *PolicyReconciler) emitTemplatePending(
+	ctx context.Context, pol *policiesv1.Policy, tIndex int, tName, msg string,
+) error {
+	msgMeta := "Pending; "
 	eventType := "Warning"
 
 	if pol.Spec.PolicyTemplates[tIndex].IgnorePending {
-		statusMsg = "Compliant; " + msg + " but ignorePending is true"
+		msgMeta = "Compliant; "
+		msg += " but ignorePending is true"
 		eventType = "Normal"
 	}
 
-	// check if the error is already present in the policy status - if so, return early
-	if strings.Contains(getLatestStatusMessage(pol, tIndex), statusMsg) {
-		return
+	err := r.emitTemplateEvent(ctx, pol, tIndex, tName, false, eventType, msgMeta, msg)
+	if err != nil {
+		tlog := log.WithValues("Policy.Namespace", pol.Namespace, "Policy.Name", pol.Name, "template", tName)
+		tlog.Error(err, "Failed to emit template pending event")
 	}
 
-	// emit the non-compliance event
-	policyComplianceReason := fmt.Sprintf(policyFmtStr, pol.GetNamespace(), tName)
-	r.Recorder.Event(pol, eventType, policyComplianceReason, statusMsg)
+	return err
+}
+
+// emitTemplateEvent performs actions that ensure correct reporting of template sync events. If the
+// policy's status already reflects the current status, then no actions are taken. The msgMeta and
+// msg are concatenated without spaces, so any spacing should be included inside the msgMeta string.
+func (r *PolicyReconciler) emitTemplateEvent(
+	ctx context.Context, pol *policiesv1.Policy, tIndex int, tName string, clusterScoped bool,
+	eventType string, msgMeta string, msg string,
+) error {
+	// check if the error is already present in the policy status - if so, return early
+	if strings.Contains(getLatestStatusMessage(pol, tIndex), msgMeta+msg) {
+		return nil
+	}
 
 	// emit an informational event
-	r.Recorder.Event(pol, eventType, "PolicyTemplateSync", statusMsg)
+	r.Recorder.Event(pol, eventType, "PolicyTemplateSync", msg)
+
+	// emit the compliance event
+	var policyComplianceReason string
+	if clusterScoped {
+		policyComplianceReason = utils.EventReason("", tName)
+	} else {
+		policyComplianceReason = utils.EventReason(pol.GetNamespace(), tName)
+	}
+
+	sender := utils.ComplianceEventSender{
+		ClusterNamespace: pol.Namespace,
+		InstanceName:     r.InstanceName,
+		ClientSet:        r.Clientset,
+		ControllerName:   ControllerName,
+	}
+
+	ownerref := metav1.OwnerReference{
+		APIVersion: pol.APIVersion,
+		Kind:       pol.Kind,
+		Name:       pol.Name,
+		UID:        pol.UID,
+	}
+
+	var compState policiesv1.ComplianceState
+	if strings.HasPrefix(msgMeta, "Compliant") {
+		compState = policiesv1.Compliant
+	} else if strings.HasPrefix(msgMeta, "NonCompliant") {
+		compState = policiesv1.NonCompliant
+	} else if strings.HasPrefix(msgMeta, "Pending") {
+		compState = policiesv1.Pending
+	}
+
+	return sender.SendEvent(ctx, nil, ownerref, policyComplianceReason, msgMeta+msg, compState)
 }
 
 // handleSyncSuccess performs common actions that should be run whenever a template is in sync,
