@@ -6,6 +6,7 @@ package templatesync
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -16,7 +17,7 @@ import (
 	extensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	extensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -24,10 +25,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/restmapper"
 	"k8s.io/client-go/tools/record"
 	policiesv1 "open-cluster-management.io/governance-policy-propagator/api/v1"
 	"open-cluster-management.io/governance-policy-propagator/controllers/common"
@@ -101,7 +102,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 	err := r.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
@@ -126,23 +127,11 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 		return reconcile.Result{}, err
 	}
 
-	var rMapper meta.RESTMapper
+	var discoveryClient discovery.DiscoveryInterface
 	var dClient dynamic.Interface
 
 	if len(instance.Spec.PolicyTemplates) > 0 {
-		// initialize restmapper
-		dd := r.Clientset.Discovery()
-
-		apigroups, err := restmapper.GetAPIGroupResources(dd)
-		if err != nil {
-			reqLogger.Error(err, "Failed to create restmapper")
-
-			policySystemErrorsCounter.WithLabelValues(instance.Name, "", "get-error").Inc()
-
-			return reconcile.Result{}, err
-		}
-
-		rMapper = restmapper.NewDiscoveryRESTMapper(apigroups)
+		discoveryClient = r.Clientset.Discovery()
 
 		// initialize dynamic client
 		dClient, err = dynamic.NewForConfig(r.Config)
@@ -275,7 +264,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 		if tName == "" {
 			errMsg := fmt.Sprintf("Failed to get name from policy template at index %v", tIndex)
-			resultError = errors.NewBadRequest(errMsg)
+			resultError = k8serrors.NewBadRequest(errMsg)
 
 			_ = r.emitTemplateError(ctx, instance, tIndex, fmt.Sprintf("[template %v]", tIndex), errMsg)
 			reqLogger.Error(resultError, "Failed to process the policy template", "templateIndex", tIndex)
@@ -297,17 +286,13 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 		tLogger := reqLogger.WithValues("template", tName)
 
-		var rsrc schema.GroupVersionResource
-
-		mapping, err := rMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
-
-		if mapping != nil {
-			rsrc = mapping.Resource
-		} else {
+		rsrc, _, err := utils.GVRFromGVK(discoveryClient, *gvk)
+		if errors.Is(err, utils.ErrNoVersionedResource) {
 			resultError = err
 			errMsg := fmt.Sprintf("Mapping not found, please check if you have CRD deployed: %s", err)
 
 			_ = r.emitTemplateError(ctx, instance, tIndex, tName, errMsg)
+
 			tLogger.Error(err, "Could not find an API mapping for the object definition",
 				"group", gvk.Group,
 				"version", gvk.Version,
@@ -317,6 +302,12 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			policyUserErrorsCounter.WithLabelValues(instance.Name, tName, "crd-error").Inc()
 
 			continue
+		} else if err != nil {
+			reqLogger.Error(err, "Failed to get the resource version metadata")
+
+			policySystemErrorsCounter.WithLabelValues(instance.Name, "", "get-error").Inc()
+
+			return reconcile.Result{}, err
 		}
 
 		// reject if not configuration policy and has templates
@@ -325,7 +316,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			// only checking for hub and not {{ as they could be valid cases where they are valid chars.
 			if strings.Contains(string(policyT.ObjectDefinition.Raw), "{{hub ") {
 				errMsg := fmt.Sprintf("Templates are not supported for kind : %s", gvk.Kind)
-				resultError = errors.NewBadRequest(errMsg)
+				resultError = k8serrors.NewBadRequest(errMsg)
 
 				_ = r.emitTemplateError(ctx, instance, tIndex, tName, errMsg)
 
@@ -337,7 +328,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			}
 		}
 
-		dependencyFailures := r.processDependencies(ctx, dClient, rMapper, templateDeps, tLogger)
+		dependencyFailures := r.processDependencies(ctx, dClient, discoveryClient, templateDeps, tLogger)
 
 		// fetch resource
 		res := dClient.Resource(rsrc).Namespace(instance.GetNamespace())
@@ -376,7 +367,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 				continue
 			}
 
-			if errors.IsNotFound(err) {
+			if k8serrors.IsNotFound(err) {
 				// not found should create it
 				plcOwnerReferences := *metav1.NewControllerRef(instance, schema.GroupVersionKind{
 					Group:   policiesv1.SchemeGroupVersion.Group,
@@ -533,7 +524,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 					refName)
 			}
 
-			resultError = errors.NewBadRequest(errMsg)
+			resultError = k8serrors.NewBadRequest(errMsg)
 
 			_ = r.emitTemplateError(ctx, instance, tIndex, tName, errMsg)
 
@@ -563,7 +554,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			if err != nil {
 				// If the policy template retrieved from the cache has since changed, there will be a conflict error
 				// and the reconcile should be retried since this is recoverable.
-				if errors.IsConflict(err) {
+				if k8serrors.IsConflict(err) {
 					return reconcile.Result{}, err
 				}
 
@@ -715,8 +706,12 @@ func (r *PolicyReconciler) cleanUpExcessTemplates(
 }
 
 // processDependencies iterates through all dependencies of a template and returns an array of any that are not met
-func (r *PolicyReconciler) processDependencies(ctx context.Context, dClient dynamic.Interface, rMapper meta.RESTMapper,
-	templateDeps map[depclient.ObjectIdentifier]string, tLogger logr.Logger,
+func (r *PolicyReconciler) processDependencies(
+	ctx context.Context,
+	dClient dynamic.Interface,
+	discoveryClient discovery.DiscoveryInterface,
+	templateDeps map[depclient.ObjectIdentifier]string,
+	tLogger logr.Logger,
 ) []depclient.ObjectIdentifier {
 	var dependencyFailures []depclient.ObjectIdentifier
 
@@ -727,13 +722,8 @@ func (r *PolicyReconciler) processDependencies(ctx context.Context, dClient dyna
 			Kind:    dep.Kind,
 		}
 
-		var rsrc schema.GroupVersionResource
-
-		depMapping, err := rMapper.RESTMapping(depGvk.GroupKind(), depGvk.Version)
-
-		if depMapping != nil {
-			rsrc = depMapping.Resource
-		} else {
+		rsrc, _, err := utils.GVRFromGVK(discoveryClient, depGvk)
+		if err != nil {
 			tLogger.Error(err, "Could not find an API mapping for the dependency", "object", dep)
 
 			dependencyFailures = append(dependencyFailures, dep)
