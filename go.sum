@@ -163,8 +163,8 @@ github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An
 github.com/stoewer/go-strcase v1.2.0/go.mod h1:IBiWB2sKIp3wVVQ3Y035++gc+knqhUQag1KpM8ahLw8=
 github.com/stoewer/go-strcase v1.3.0 h1:g0eASXYtp+yvN9fK8sH94oCIk0fau9uV1/ZdJ0AVEzs=
 github.com/stoewer/go-strcase v1.3.0/go.mod h1:fAH5hQ5pehh+j3nZfvwdk2RgEgQjAoM8wodgtPmh1xo=
-github.com/stolostron/config-policy-controller v0.0.0-20231026183442-1b53a07c6a1f h1:0IV9sZlTpuvzH95sYufKtkvXrpzvzXZ2Q0D24ZL/2V0=
-github.com/stolostron/config-policy-controller v0.0.0-20231026183442-1b53a07c6a1f/go.mod h1:t/RuzNJeNH2thZdc5y9yDfcMlcgxXfVarP22vMDQuG8=
+github.com/stolostron/config-policy-controller v0.0.0-20231109160711-23bd03983248 h1:IvkaGVv3KLXsU5jqLL8K2EUnGrrmq7hRDe0Vzmdl+LI=
+github.com/stolostron/config-policy-controller v0.0.0-20231109160711-23bd03983248/go.mod h1:7T6LVsdNY8TEQ9BswwMQLgxw//1yfRTB214M/n1sf7s=
 github.com/stolostron/go-log-utils v0.1.2 h1:7l1aJWvBqU2+DUyimcslT5SJpdygVY/clRDmX5sO29c=
 github.com/stolostron/go-log-utils v0.1.2/go.mod h1:8zrB8UJmp1rXhv3Ck9bBl5SpNfKk3SApeElbo96YRtQ=
 github.com/stolostron/governance-policy-propagator v0.0.0-20231024192002-0a8f89da6607 h1:pAzWzSY8U19Y3wtG4X3+BbzAin2qL6LSpXYG9xJZFs8=

@@ -16,10 +16,10 @@ require (
 	k8s.io/api v0.27.7
 	k8s.io/apiextensions-apiserver v0.27.7
 	k8s.io/apimachinery v0.27.7
-	k8s.io/client-go v12.0.0+incompatible
+	k8s.io/client-go v0.27.7
 	k8s.io/klog/v2 v2.100.1
 	open-cluster-management.io/addon-framework v0.8.0
-	open-cluster-management.io/config-policy-controller v0.12.0
+	open-cluster-management.io/config-policy-controller v0.12.1-0.20231026193151-d916208dded3
 	open-cluster-management.io/governance-policy-propagator v0.12.0
 	sigs.k8s.io/controller-runtime v0.15.2
 )
@@ -101,7 +101,7 @@ replace (
 	k8s.io/api => k8s.io/api v0.26.10 // Replaced so that 'go get -u' works. Remove/bump when upgrading.
 	k8s.io/client-go => k8s.io/client-go v0.26.10 // Replaced so that 'go get -u' works. Remove/bump when upgrading.
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // Replaced so that 'go get -u' works. Remove/bump when upgrading.
-	open-cluster-management.io/config-policy-controller => github.com/stolostron/config-policy-controller v0.0.0-20231026183442-1b53a07c6a1f
+	open-cluster-management.io/config-policy-controller => github.com/stolostron/config-policy-controller v0.0.0-20231109160711-23bd03983248
 	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator v0.0.0-20231024192002-0a8f89da6607
 	open-cluster-management.io/multicloud-operators-subscription => github.com/stolostron/multicloud-operators-subscription v1.2.4-0-20211122-7277a37.0.20231027053049-af37552e5602
 )
