@@ -13,7 +13,6 @@ on:
 defaults:
   run:
     shell: bash
-    working-directory: governance-policy-framework-addon
 
 jobs:
   kind-tests:
@@ -34,14 +33,11 @@ jobs:
     steps:
     - name: Checkout Governance Policy Framework Addon
       uses: actions/checkout@v4
-      with:
-        path: governance-policy-framework-addon
-        fetch-depth: 0 # Fetch all history for all tags and branches
 
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version-file: governance-policy-framework-addon/go.mod
+        go-version-file: go.mod
 
     - name: Verify modules
       run: |
@@ -125,9 +121,9 @@ jobs:
       with:
         name: artifacts
         path: |
-          governance-policy-framework-addon/coverage*.out
-          governance-policy-framework-addon/event.json
-          governance-policy-framework-addon/gosec.json
+          coverage*.out
+          event.json
+          gosec.json
 
     - name: Debug
       if: ${{ failure() }}
