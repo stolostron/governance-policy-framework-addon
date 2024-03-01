@@ -3,7 +3,7 @@ module open-cluster-management.io/governance-policy-framework-addon
 go 1.21
 
 require (
-	github.com/go-logr/logr v1.3.0
+	github.com/go-logr/logr v1.4.1
 	github.com/go-logr/zapr v1.3.0
 	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.28.1
@@ -19,8 +19,8 @@ require (
 	k8s.io/client-go v0.28.4
 	k8s.io/klog/v2 v2.110.1
 	open-cluster-management.io/addon-framework v0.8.0
-	open-cluster-management.io/config-policy-controller v0.12.1-0.20231026193151-d916208dded3
-	open-cluster-management.io/governance-policy-propagator v0.12.1-0.20240206141335-c3c38e19a25d
+	open-cluster-management.io/config-policy-controller v0.13.0
+	open-cluster-management.io/governance-policy-propagator v0.13.0
 	sigs.k8s.io/controller-runtime v0.16.3
 )
 
@@ -52,7 +52,7 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20231023181126-ff6d637d2a7b // indirect
-	github.com/google/uuid v1.4.0 // indirect
+	github.com/google/uuid v1.5.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
@@ -75,24 +75,25 @@ require (
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/stolostron/go-template-utils/v4 v4.0.1-0.20231212190701-4dc096ec1b40 // indirect
+	github.com/stolostron/rbac-api-utils v0.0.0-20240227203157-d0f039286f99 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e // indirect
-	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
-	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
-	golang.org/x/term v0.15.0 // indirect
+	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/term v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.16.0 // indirect
+	golang.org/x/tools v0.17.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231127180814-3a041ad873d4 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231127180814-3a041ad873d4 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240108191215-35c7eff3a6b1 // indirect
+	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
@@ -113,7 +114,7 @@ replace (
 	golang.org/x/crypto => golang.org/x/crypto v0.14.0 // CVE-2021-43565
 	golang.org/x/net => golang.org/x/net v0.17.0 // CVE-2023-39325
 	golang.org/x/text => golang.org/x/text v0.13.0 // CVE-2022-32149
-	open-cluster-management.io/config-policy-controller => github.com/stolostron/config-policy-controller v0.0.0-20231109160711-23bd03983248
-	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator v0.0.0-20240213202608-2ad6c3e321e7
-	open-cluster-management.io/multicloud-operators-subscription => github.com/stolostron/multicloud-operators-subscription v1.2.4-0-20211122-7277a37.0.20231027053049-af37552e5602
+	open-cluster-management.io/config-policy-controller => github.com/stolostron/config-policy-controller v0.0.0-20240302002113-682625a741d5
+	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator v0.0.0-20240304152706-a48944bebe8f
+	open-cluster-management.io/multicloud-operators-subscription => github.com/stolostron/multicloud-operators-subscription v1.2.4-0-20211122-7277a37.0.20240221162634-04f365f952d3
 )
