@@ -99,6 +99,7 @@ require (
 replace (
 	golang.org/x/crypto => golang.org/x/crypto v0.8.0 // CVE-2021-43565
 	golang.org/x/text => golang.org/x/text v0.9.0 // CVE-2022-32149
+	google.golang.org/protobuf => google.golang.org/protobuf v1.33.0 // CVE-2024-24786; >=v1.33.0
 	k8s.io/api => k8s.io/api v0.26.4 // Replaced so that 'go get -u' works. Remove/bump when upgrading.
 	k8s.io/client-go => k8s.io/client-go v0.26.4
 	open-cluster-management.io/config-policy-controller => github.com/stolostron/config-policy-controller v0.0.0-20230522145514-88a2cf4893c9
