@@ -98,6 +98,7 @@ replace (
 	golang.org/x/crypto => golang.org/x/crypto v0.14.0 // CVE-2021-43565
 	golang.org/x/net => golang.org/x/net v0.17.0 // CVE-2023-39325
 	golang.org/x/text => golang.org/x/text v0.13.0 // CVE-2022-32149
+	google.golang.org/protobuf => google.golang.org/protobuf v1.33.0 // CVE-2024-24786; >=v1.33.0
 	k8s.io/api => k8s.io/api v0.26.10 // Replaced so that 'go get -u' works. Remove/bump when upgrading.
 	k8s.io/client-go => k8s.io/client-go v0.26.10 // Replaced so that 'go get -u' works. Remove/bump when upgrading.
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // Replaced so that 'go get -u' works. Remove/bump when upgrading.
