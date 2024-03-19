@@ -433,10 +433,14 @@ func getManager(
 		os.Exit(1)
 	}
 
+	configFiles := []string{tool.Options.HubConfigFilePathName}
+
+	if hubCfg.TLSClientConfig.CertFile != "" {
+		configFiles = append(configFiles, hubCfg.TLSClientConfig.CertFile)
+	}
+
 	// use config check
-	configChecker, err := addonutils.NewConfigChecker(
-		"governance-policy-framework-addon", tool.Options.HubConfigFilePathName,
-	)
+	configChecker, err := addonutils.NewConfigChecker("governance-policy-framework-addon", configFiles...)
 	if err != nil {
 		log.Error(err, "unable to setup a configChecker")
 		os.Exit(1)
@@ -581,10 +585,14 @@ func getHubManager(
 		os.Exit(1)
 	}
 
+	configFiles := []string{tool.Options.HubConfigFilePathName}
+
+	if hubCfg.TLSClientConfig.CertFile != "" {
+		configFiles = append(configFiles, hubCfg.TLSClientConfig.CertFile)
+	}
+
 	// use config check
-	configChecker, err := addonutils.NewConfigChecker(
-		"governance-policy-framework-addon2", tool.Options.HubConfigFilePathName,
-	)
+	configChecker, err := addonutils.NewConfigChecker("governance-policy-framework-addon2", configFiles...)
 	if err != nil {
 		log.Error(err, "unable to setup a configChecker")
 		os.Exit(1)
