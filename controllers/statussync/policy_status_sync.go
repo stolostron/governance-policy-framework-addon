@@ -15,17 +15,17 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	policiesv1 "open-cluster-management.io/governance-policy-propagator/api/v1"
-	"open-cluster-management.io/governance-policy-propagator/controllers/common"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -63,6 +63,7 @@ type PolicyReconciler struct {
 	ManagedRecorder       record.EventRecorder
 	Scheme                *runtime.Scheme
 	ClusterNamespaceOnHub string
+	SpecSyncRequests      chan<- event.GenericEvent
 }
 
 //+kubebuilder:rbac:groups=policy.open-cluster-management.io,resources=policies,verbs=get;list;watch;create;update;patch;delete
@@ -95,16 +96,16 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 	err := r.ManagedClient.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			// The replicated policy on the managed cluster was deleted.
 			// check if it was deleted by user by checking if it still exists on hub
 			hubInstance := &policiesv1.Policy{}
+
 			err = r.HubClient.Get(
 				ctx, types.NamespacedName{Namespace: r.ClusterNamespaceOnHub, Name: request.Name}, hubInstance,
 			)
-
 			if err != nil {
-				if errors.IsNotFound(err) {
+				if k8serrors.IsNotFound(err) {
 					// confirmed deleted on hub, doing nothing
 					reqLogger.Info("Policy was deleted, no status to update")
 
@@ -116,18 +117,13 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 				return reconcile.Result{}, err
 			}
 
-			// still exist on hub, recover policy on managed
-			managedInstance := hubInstance.DeepCopy()
-			managedInstance.Namespace = request.Namespace
+			if r.SpecSyncRequests != nil {
+				reqLogger.Info("Policy is missing on the managed cluster. Triggering the spec-sync to recreate it.")
 
-			if managedInstance.Labels[common.ClusterNamespaceLabel] != "" {
-				managedInstance.Labels[common.ClusterNamespaceLabel] = request.Namespace
+				r.triggerSpecSyncReconcile(request)
 			}
 
-			managedInstance.SetOwnerReferences(nil)
-			managedInstance.SetResourceVersion("")
-
-			return reconcile.Result{}, r.ManagedClient.Create(ctx, managedInstance)
+			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
 		reqLogger.Error(err, "Error reading the policy object, will requeue the request")
@@ -136,24 +132,20 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 	}
 	// get hub policy
 	hubPlc := &policiesv1.Policy{}
-	err = r.HubClient.Get(ctx, types.NamespacedName{Namespace: r.ClusterNamespaceOnHub, Name: request.Name}, hubPlc)
 
+	err = r.HubClient.Get(ctx, types.NamespacedName{Namespace: r.ClusterNamespaceOnHub, Name: request.Name}, hubPlc)
 	if err != nil {
 		// hub policy not found, it has been deleted
-		if errors.IsNotFound(err) {
-			reqLogger.Info("Hub policy not found, it has been deleted")
-			// try to delete local one
-			err = r.ManagedClient.Delete(ctx, instance)
-			if err == nil || errors.IsNotFound(err) {
-				// no err or err is not found means local policy has been deleted
-				reqLogger.Info("Managed policy was deleted")
+		if k8serrors.IsNotFound(err) {
+			if r.SpecSyncRequests != nil {
+				reqLogger.Info(
+					"Policy is missing on the hub. Triggering the spec-sync to delete the replicated policy.",
+				)
 
-				return reconcile.Result{}, nil
+				r.triggerSpecSyncReconcile(request)
 			}
-			// otherwise requeue to delete again
-			reqLogger.Error(err, "Failed to delete the managed policy, will requeue the request")
 
-			return reconcile.Result{}, err
+			return reconcile.Result{}, nil
 		}
 
 		reqLogger.Error(err, "Failed to get policy on hub")
@@ -162,19 +154,19 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 	}
 	// found, ensure managed plc matches hub plc
 	if !utils.EquivalentReplicatedPolicies(instance, hubPlc) {
-		// plc mismatch, update to latest
-		instance.SetAnnotations(hubPlc.GetAnnotations())
-		instance.Spec = hubPlc.Spec
-		// update and stop here
-		reqLogger.Info("Found mismatch with hub and managed policies, updating")
+		if r.SpecSyncRequests != nil {
+			reqLogger.Info("Found a mismatch with the hub and managed policies. Triggering the spec-sync to handle it.")
 
-		return reconcile.Result{}, r.ManagedClient.Update(ctx, instance)
+			r.triggerSpecSyncReconcile(request)
+		}
+
+		return reconcile.Result{}, nil
 	}
 
 	// plc matches hub plc, then get events
 	eventList := &corev1.EventList{}
-	err = r.ManagedClient.List(ctx, eventList, client.InNamespace(instance.GetNamespace()))
 
+	err = r.ManagedClient.List(ctx, eventList, client.InNamespace(instance.GetNamespace()))
 	if err != nil {
 		// there is an error to list events, requeue
 		reqLogger.Error(err, "Error listing events, will requeue the request")
@@ -390,7 +382,6 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 		reqLogger.Info("status mismatch on managed, update it")
 
 		err = r.ManagedClient.Status().Update(ctx, instance)
-
 		if err != nil {
 			reqLogger.Error(err, "Failed to get update policy status on managed")
 
@@ -415,8 +406,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			reqLogger.Info("status not in sync, update the hub")
 
 			hubPlc.Status = instance.Status
-			err = r.HubClient.Status().Update(ctx, hubPlc)
 
+			err = r.HubClient.Status().Update(ctx, hubPlc)
 			if err != nil {
 				reqLogger.Error(err, "Failed to update policy status on hub")
 
@@ -434,6 +425,16 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 	reqLogger.V(2).Info("Reconciling complete")
 
 	return reconcile.Result{}, nil
+}
+
+func (r *PolicyReconciler) triggerSpecSyncReconcile(request reconcile.Request) {
+	hubReplicatedPolicy := &unstructured.Unstructured{}
+	hubReplicatedPolicy.SetAPIVersion(policiesv1.GroupVersion.String())
+	hubReplicatedPolicy.SetKind(policiesv1.Kind)
+	hubReplicatedPolicy.SetName(request.Name)
+	hubReplicatedPolicy.SetNamespace(r.ClusterNamespaceOnHub)
+
+	r.SpecSyncRequests <- event.GenericEvent{Object: hubReplicatedPolicy}
 }
 
 type historyEvent struct {
