@@ -17,8 +17,10 @@ import (
 	"open-cluster-management.io/governance-policy-propagator/controllers/common"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"open-cluster-management.io/governance-policy-framework-addon/controllers/uninstall"
 	"open-cluster-management.io/governance-policy-framework-addon/controllers/utils"
@@ -29,11 +31,16 @@ const ControllerName string = "policy-spec-sync"
 var log = logf.Log.WithName(ControllerName)
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager, additionalSource *source.Channel) error {
+	builder := ctrl.NewControllerManagedBy(mgr).
 		For(&policiesv1.Policy{}).
-		Named(ControllerName).
-		Complete(r)
+		Named(ControllerName)
+
+	if additionalSource != nil {
+		builder = builder.WatchesRawSource(additionalSource, &handler.EnqueueRequestForObject{})
+	}
+
+	return builder.Complete(r)
 }
 
 // blank assignment to verify that ReconcilePolicy implements reconcile.Reconciler
@@ -111,8 +118,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 	}
 
 	managedPlc := &policiesv1.Policy{}
-	err = r.ManagedClient.Get(ctx, types.NamespacedName{Namespace: r.TargetNamespace, Name: request.Name}, managedPlc)
 
+	err = r.ManagedClient.Get(ctx, types.NamespacedName{Namespace: r.TargetNamespace, Name: request.Name}, managedPlc)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// not found on managed cluster, create it
@@ -127,8 +134,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 			managedPlc.SetOwnerReferences(nil)
 			managedPlc.SetResourceVersion("")
-			err = r.ManagedClient.Create(ctx, managedPlc)
 
+			err = r.ManagedClient.Create(ctx, managedPlc)
 			if err != nil {
 				reqLogger.Error(err, "Failed to create policy on managed...")
 

@@ -51,8 +51,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"open-cluster-management.io/governance-policy-framework-addon/controllers/gatekeepersync"
 	"open-cluster-management.io/governance-policy-framework-addon/controllers/secretsync"
@@ -266,7 +268,8 @@ func main() {
 	mainCtx := ctrl.SetupSignalHandler()
 	mgrCtx, mgrCtxCancel := context.WithCancel(mainCtx)
 
-	mgr := getManager(mgrCtx, mgrOptionsBase, mgrHealthAddr, hubCfg, managedCfg)
+	var specSyncRequests chan event.GenericEvent
+	var specSyncRequestsSource *source.Channel
 
 	var hubMgr manager.Manager
 
@@ -279,8 +282,18 @@ func main() {
 
 		healthAddresses = append(healthAddresses, hubMgrHealthAddr)
 
-		hubMgr = getHubManager(mgrOptionsBase, hubMgrHealthAddr, hubCfg, managedCfg)
+		bufferSize := 100
+
+		specSyncRequests = make(chan event.GenericEvent, bufferSize)
+		specSyncRequestsSource = &source.Channel{
+			Source:         specSyncRequests,
+			DestBufferSize: bufferSize,
+		}
+
+		hubMgr = getHubManager(mgrOptionsBase, hubMgrHealthAddr, hubCfg, managedCfg, specSyncRequestsSource)
 	}
+
+	mgr := getManager(mgrCtx, mgrOptionsBase, mgrHealthAddr, hubCfg, managedCfg, specSyncRequests)
 
 	log.Info("Starting the controller managers")
 
@@ -370,7 +383,12 @@ func main() {
 
 // getManager return a controller Manager object that watches on the managed cluster and has the controllers registered.
 func getManager(
-	mgrCtx context.Context, options manager.Options, healthAddr string, hubCfg *rest.Config, managedCfg *rest.Config,
+	mgrCtx context.Context,
+	options manager.Options,
+	healthAddr string,
+	hubCfg *rest.Config,
+	managedCfg *rest.Config,
+	specSyncRequests chan<- event.GenericEvent,
 ) manager.Manager {
 	hubClient, err := client.New(hubCfg, client.Options{Scheme: scheme})
 	if err != nil {
@@ -462,6 +480,7 @@ func getManager(
 		ManagedClient:         mgr.GetClient(),
 		ManagedRecorder:       mgr.GetEventRecorderFor(statussync.ControllerName),
 		Scheme:                mgr.GetScheme(),
+		SpecSyncRequests:      specSyncRequests,
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Policy")
 		os.Exit(1)
@@ -520,7 +539,11 @@ func getManager(
 
 // getHubManager return a controller Manager object that watches on the Hub and has the controllers registered.
 func getHubManager(
-	options manager.Options, healthAddr string, hubCfg *rest.Config, managedCfg *rest.Config,
+	options manager.Options,
+	healthAddr string,
+	hubCfg *rest.Config,
+	managedCfg *rest.Config,
+	specSyncRequestsSource *source.Channel,
 ) manager.Manager {
 	managedClient, err := client.New(managedCfg, client.Options{Scheme: scheme})
 	if err != nil {
@@ -570,7 +593,7 @@ func getHubManager(
 		ManagedRecorder: managedRecorder,
 		Scheme:          mgr.GetScheme(),
 		TargetNamespace: tool.Options.ClusterNamespace,
-	}).SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(mgr, specSyncRequestsSource); err != nil {
 		log.Error(err, "Unable to create the controller", "controller", specsync.ControllerName)
 		os.Exit(1)
 	}
