@@ -1,7 +1,7 @@
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
-  name: case9-test-policy
+  name: case9-iam-test-policy
   labels:
     policy.open-cluster-management.io/cluster-name: managed
     policy.open-cluster-management.io/cluster-namespace: managed
@@ -12,21 +12,13 @@ spec:
   policy-templates:
     - objectDefinition:
         apiVersion: policy.open-cluster-management.io/v1
-        kind: ConfigurationPolicy
+        kind: IamPolicy
         metadata:
-          name: case9-config-policy
+          name: case9-iam
         spec:
+          severity: medium
+          namespaceSelector:
+            include: ["*"]
+            exclude: ["kube-*", "openshift-*"]
           remediationAction: inform
-          object-templates:
-            - complianceType: musthave
-              objectDefinition:
-                apiVersion: v1
-                kind: Pod
-                metadata:
-                  name: nginx-pod-e2e
-                  namespace: default
-                spec:
-                  containers:
-                    - name: nginx
-
-
+          maxClusterRoleBindingUsers: 2

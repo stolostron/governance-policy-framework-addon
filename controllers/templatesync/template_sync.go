@@ -300,6 +300,15 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			continue
 		}
 
+		if object.GetObjectKind().GroupVersionKind().Kind == "IamPolicy" {
+			errMsg := "IamPolicy is no longer supported"
+
+			_ = r.emitTemplateError(ctx, instance, tIndex, fmt.Sprintf("template-%v", tIndex), false, errMsg)
+
+			reqLogger.Error(resultError, errMsg, "templateIndex", tIndex)
+
+			continue
+		}
 		// Special handling booleans, whether this template is:
 		// - ContraintTemplate handled by Gatekeeper
 		// - Cluster scoped

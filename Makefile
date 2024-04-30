@@ -121,7 +121,7 @@ build:
 
 .PHONY: run
 run:
-	HUB_CONFIG=$(HUB_CONFIG) MANAGED_CONFIG=$(MANAGED_CONFIG) go run ./main.go --leader-elect=false --cluster-namespace=$(MANAGED_CLUSTER_NAME)
+	HUB_CONFIG=$(HUB_CONFIG) MANAGED_CONFIG=$(MANAGED_CONFIG) OSDK_FORCE_RUN_MODE="local" go run ./main.go --leader-elect=false --cluster-namespace=$(MANAGED_CLUSTER_NAME) --cluster-namespace-on-hub=$(MANAGED_CLUSTER_NAME) --log-level=3 --compliance-api-url=http://127.0.0.1:8385 
 
 ############################################################
 # images section

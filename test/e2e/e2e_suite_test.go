@@ -43,6 +43,7 @@ var (
 	gvrSecret              schema.GroupVersionResource
 	gvrEvent               schema.GroupVersionResource
 	gvrConfigurationPolicy schema.GroupVersionResource
+	gvrIamPolicy           schema.GroupVersionResource
 	gvrConstraintTemplate  schema.GroupVersionResource
 	kubeconfigHub          string
 	kubeconfigManaged      string
@@ -99,6 +100,11 @@ var _ = BeforeSuite(func() {
 		Group:    "policy.open-cluster-management.io",
 		Version:  "v1",
 		Resource: "configurationpolicies",
+	}
+	gvrIamPolicy = schema.GroupVersionResource{
+		Group:    "policy.open-cluster-management.io",
+		Version:  "v1",
+		Resource: "iampolicies",
 	}
 	gvrConstraintTemplate = schema.GroupVersionResource{
 		Group:    "templates.gatekeeper.sh",

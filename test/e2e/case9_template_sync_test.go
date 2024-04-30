@@ -4,8 +4,11 @@
 package e2e
 
 import (
+	"context"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"open-cluster-management.io/governance-policy-propagator/controllers/common"
 	"open-cluster-management.io/governance-policy-propagator/test/utils"
@@ -109,5 +112,54 @@ var _ = Describe("Test template sync", func() {
 			false,
 			defaultTimeoutSeconds,
 		)
+	})
+})
+
+var _ = Describe("Test IamPolicy", func() {
+	const (
+		case9PolicyName    string = "case9-iam-test-policy"
+		case9PolicyYaml    string = "../resources/case9_template_sync/case9-iam-policy.yaml"
+		case9IamPolicyName string = "case9-iam-test-policy"
+		fieldSelector      string = "involvedObject.name=" + case9PolicyName
+	)
+
+	BeforeEach(func() {
+		hubApplyPolicy(case9PolicyName, case9PolicyYaml)
+	})
+	AfterEach(func() {
+		By("Deleting a policy on the hub in ns:" + clusterNamespaceOnHub)
+		_, err := kubectlHub("delete", "-f", case9PolicyYaml, "-n", clusterNamespaceOnHub, "--ignore-not-found")
+		Expect(err).ShouldNot(HaveOccurred())
+		opt := metav1.ListOptions{
+			FieldSelector: "metadata.name=" + case9PolicyName,
+		}
+		utils.ListWithTimeout(clientHubDynamic, gvrPolicy, opt, 0, true, defaultTimeoutSeconds)
+
+		_, err = kubectlManaged("delete", "event", "-n", clusterNamespace,
+			"--field-selector", fieldSelector)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		utils.ListWithTimeout(
+			clientManagedDynamic,
+			gvrEvent,
+			metav1.ListOptions{FieldSelector: fieldSelector},
+			0,
+			true,
+			defaultTimeoutSeconds)
+	})
+	It("should have a non-support event for IamPolicy", func() {
+		Consistently(func() interface{} {
+			_, err := clientHubDynamic.Resource(gvrIamPolicy).Namespace(clusterNamespace).
+				Get(context.TODO(), case9IamPolicyName, metav1.GetOptions{})
+
+			return errors.IsNotFound(err)
+		}, 5, 1).Should(BeTrue(), "Should not create any IamPolicies")
+
+		eventList, err := clientManaged.CoreV1().Events("").List(context.TODO(),
+			metav1.ListOptions{FieldSelector: fieldSelector + ",reason=PolicyTemplateSync"})
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(eventList.Items).Should(HaveLen(1))
+
+		Expect(eventList.Items[0].Message).Should(Equal("template-error; IamPolicy is no longer supported"))
 	})
 })
