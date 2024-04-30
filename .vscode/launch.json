@@ -49,7 +49,9 @@
             "program": "${workspaceFolder}/test/e2e/e2e_suite_test.go",
             "args": [
                 "-ginkgo.debug",
-                "-ginkgo.v"
+                "-ginkgo.v",
+                "--kubeconfig_managed=${workspaceFolder}/kubeconfig_managed_e2e",
+                "--kubeconfig_hub=${workspaceFolder}/kubeconfig_hub_e2e",
             ],
             "env": {
                 "KUBECONFIG": "${workspaceFolder}/kubeconfig_managed_e2e"

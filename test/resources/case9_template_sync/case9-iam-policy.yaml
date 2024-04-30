@@ -1,0 +1,24 @@
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: case9-iam-test-policy
+  labels:
+    policy.open-cluster-management.io/cluster-name: managed
+    policy.open-cluster-management.io/cluster-namespace: managed
+    policy.open-cluster-management.io/root-policy: case9-test-policy
+spec:
+  remediationAction: inform
+  disabled: false
+  policy-templates:
+    - objectDefinition:
+        apiVersion: policy.open-cluster-management.io/v1
+        kind: IamPolicy
+        metadata:
+          name: case9-iam
+        spec:
+          severity: medium
+          namespaceSelector:
+            include: ["*"]
+            exclude: ["kube-*", "openshift-*"]
+          remediationAction: inform
+          maxClusterRoleBindingUsers: 2
