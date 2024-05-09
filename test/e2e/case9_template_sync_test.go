@@ -10,6 +10,8 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	policiesv1 "open-cluster-management.io/governance-policy-propagator/api/v1"
 	"open-cluster-management.io/governance-policy-propagator/controllers/common"
 	"open-cluster-management.io/governance-policy-propagator/test/utils"
 )
@@ -155,11 +157,36 @@ var _ = Describe("Test IamPolicy", func() {
 			return errors.IsNotFound(err)
 		}, 5, 1).Should(BeTrue(), "Should not create any IamPolicies")
 
-		eventList, err := clientManaged.CoreV1().Events("").List(context.TODO(),
+		eventList, err := clientManaged.CoreV1().Events(clusterNamespace).List(context.TODO(),
 			metav1.ListOptions{FieldSelector: fieldSelector + ",reason=PolicyTemplateSync"})
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(eventList.Items).Should(HaveLen(1))
 
 		Expect(eventList.Items[0].Message).Should(Equal("template-error; IamPolicy is no longer supported"))
+
+		eventList, err = clientManaged.CoreV1().Events(clusterNamespace).List(context.TODO(),
+			metav1.ListOptions{FieldSelector: fieldSelector + ",reason=policy: " +
+				clusterNamespace + "/" + "case9-iam"})
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(eventList.Items).Should(HaveLen(1))
+		Expect(eventList.Items[0].Message).
+			Should(Equal("NonCompliant; template-error; IamPolicy is no longer supported"))
+
+		var plc *policiesv1.Policy
+
+		Eventually(func(g Gomega) error {
+			rootPolicy, err := clientHubDynamic.Resource(gvrPolicy).Namespace(clusterNamespaceOnHub).
+				Get(context.TODO(), case9IamPolicyName, metav1.GetOptions{})
+			g.Expect(err).ShouldNot(HaveOccurred())
+
+			err = runtime.DefaultUnstructuredConverter.FromUnstructured(rootPolicy.Object, &plc)
+			g.Expect(plc.Status.ComplianceState).Should(Equal(policiesv1.NonCompliant))
+			g.Expect(plc.Status.Details).Should(HaveLen(1))
+			g.Expect(plc.Status.Details[0].History).Should(HaveLen(1))
+			g.Expect(plc.Status.Details[0].History[0].Message).
+				Should(Equal("NonCompliant; template-error; IamPolicy is no longer supported"))
+
+			return err
+		}, 10, 1).ShouldNot(HaveOccurred())
 	})
 })

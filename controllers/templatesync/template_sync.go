@@ -297,15 +297,6 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 			continue
 		}
 
-		if object.GetObjectKind().GroupVersionKind().Kind == "IamPolicy" {
-			errMsg := "IamPolicy is no longer supported"
-
-			_ = r.emitTemplateError(ctx, instance, tIndex, fmt.Sprintf("template-%v", tIndex), false, errMsg)
-
-			reqLogger.Error(resultError, errMsg, "templateIndex", tIndex)
-
-			continue
-		}
 		// Special handling booleans, whether this template is:
 		// - ContraintTemplate handled by Gatekeeper
 		// - Cluster scoped
@@ -314,6 +305,33 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 		isGkConstraint := gvk.Group == utils.GConstraint
 		isGkObj := isGkConstraintTemplate || isGkConstraint
 		isClusterScoped := isGkObj
+
+		metaObj, ok := object.(metav1.Object)
+		tName := metaObj.GetName()
+
+		if !ok || tName == "" {
+			errMsg := fmt.Sprintf("Failed to parse or get name from policy template at index %v", tIndex)
+			resultError = k8serrors.NewBadRequest(errMsg)
+
+			_ = r.emitTemplateError(ctx, instance, tIndex,
+				fmt.Sprintf("template-%v", tIndex), isClusterScoped, errMsg)
+
+			reqLogger.Error(resultError, "Failed to process the policy template", "templateIndex", tIndex)
+
+			policyUserErrorsCounter.WithLabelValues(instance.Name, "", "format-error").Inc()
+
+			continue
+		}
+
+		if object.GetObjectKind().GroupVersionKind().Kind == "IamPolicy" {
+			errMsg := "IamPolicy is no longer supported"
+
+			_ = r.emitTemplateError(ctx, instance, tIndex, tName, false, errMsg)
+
+			reqLogger.Error(resultError, errMsg, "templateIndex", tIndex)
+
+			continue
+		}
 
 		// Handle dependencies that apply to the current policy-template
 		depConflictErr := false
@@ -364,23 +382,6 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 		// skip template if dependencies ask for conflicting compliances
 		if depConflictErr {
-			continue
-		}
-
-		metaObj, ok := object.(metav1.Object)
-		tName := metaObj.GetName()
-
-		if !ok || tName == "" {
-			errMsg := fmt.Sprintf("Failed to parse or get name from policy template at index %v", tIndex)
-			resultError = k8serrors.NewBadRequest(errMsg)
-
-			_ = r.emitTemplateError(ctx, instance, tIndex,
-				fmt.Sprintf("template-%v", tIndex), isClusterScoped, errMsg)
-
-			reqLogger.Error(resultError, "Failed to process the policy template", "templateIndex", tIndex)
-
-			policyUserErrorsCounter.WithLabelValues(instance.Name, "", "format-error").Inc()
-
 			continue
 		}
 
