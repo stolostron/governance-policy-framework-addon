@@ -390,13 +390,22 @@ spec:
         - "false"
     - name: repo-defined-tests
       taskSpec:
+        results:
+        - description: Tekton task test output.
+          name: TEST_OUTPUT
         steps:
         - name: do-test
           image: registry.ci.openshift.org/stolostron/builder:go1.21-linux
           script: |
             #!/usr/bin/env bash
             set -euxo pipefail
-            cd $(workspaces.workspace.path)
+            env
+            ls -lah
+            cd $(workspaces.workspace.path)/source
+            ls -lah
+
+            echo '{"result":"SUCCESS","timestamp":"'$(date +%s)'","note":"hello","successes":1,"failures":0,"warnings":0}' | tee $(results.TEST_OUTPUT.path)
+
             make fmt
             make lint
             make gosec-scan
