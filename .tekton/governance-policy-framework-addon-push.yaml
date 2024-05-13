@@ -160,8 +160,6 @@ spec:
         value: $(params.git-url)
       - name: revision
         value: $(params.revision)
-      runAfter:
-      - init
       taskRef:
         params:
         - name: name
@@ -249,8 +247,6 @@ spec:
         value: $(params.output-image)
       - name: BASE_IMAGES
         value: $(tasks.build-container.results.BASE_IMAGES_DIGESTS)
-      runAfter:
-      - build-container
       taskRef:
         params:
         - name: name
@@ -280,8 +276,6 @@ spec:
         value: $(tasks.build-container.results.IMAGE_URL)
       - name: IMAGE_DIGEST
         value: $(tasks.build-container.results.IMAGE_DIGEST)
-      runAfter:
-      - build-container
       taskRef:
         params:
         - name: name
@@ -302,8 +296,6 @@ spec:
         value: $(tasks.build-container.results.IMAGE_DIGEST)
       - name: image-url
         value: $(tasks.build-container.results.IMAGE_URL)
-      runAfter:
-      - build-container
       taskRef:
         params:
         - name: name
@@ -322,8 +314,6 @@ spec:
       params:
       - name: image-url
         value: $(tasks.build-container.results.IMAGE_URL)
-      runAfter:
-      - build-container
       taskRef:
         params:
         - name: name
@@ -364,8 +354,6 @@ spec:
         value: $(tasks.build-container.results.IMAGE_DIGEST)
       - name: image-url
         value: $(tasks.build-container.results.IMAGE_URL)
-      runAfter:
-      - build-container
       taskRef:
         params:
         - name: name
@@ -386,8 +374,6 @@ spec:
         value: $(tasks.build-container.results.IMAGE_URL)
       - name: IMAGE_DIGEST
         value: $(tasks.build-container.results.IMAGE_DIGEST)
-      runAfter:
-      - build-container
       taskRef:
         params:
         - name: name
@@ -402,6 +388,30 @@ spec:
         operator: in
         values:
         - "false"
+    - name: repo-defined-tests
+      taskSpec:
+        steps:
+        - name: do-test
+          image: registry.ci.openshift.org/stolostron/builder:go1.21-linux
+          script: |
+            #!/usr/bin/env bash
+            set -euxo pipefail
+            cd $(workspaces.workspace.path)
+            make fmt
+            make lint
+            make gosec-scan
+            make generate-operator-yaml
+            make test
+        workspaces:
+        - name: workspace
+          workspace: workspace
+      when:
+      - input: $(params.skip-checks)
+        operator: in
+        values:
+        - "false"
+      runAfter:
+      - build-container
     workspaces:
     - name: workspace
     - name: git-auth
