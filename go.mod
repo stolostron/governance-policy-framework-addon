@@ -12,7 +12,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stolostron/go-log-utils v0.1.2
 	github.com/stolostron/kubernetes-dependency-watches v0.5.2
-	golang.org/x/mod v0.14.0
+	golang.org/x/mod v0.17.0
 	k8s.io/api v0.28.4
 	k8s.io/apiextensions-apiserver v0.28.4
 	k8s.io/apimachinery v0.28.4
@@ -79,21 +79,21 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.18.0 // indirect
+	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e // indirect
-	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
-	golang.org/x/term v0.16.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/sync v0.7.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/term v0.21.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.17.0 // indirect
+	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231127180814-3a041ad873d4 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240108191215-35c7eff3a6b1 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
@@ -111,10 +111,6 @@ require (
 
 replace (
 	github.com/imdario/mergo => github.com/imdario/mergo v0.3.16 // Replaced so that 'go get -u' works. Remove/bump when upgrading.
-	golang.org/x/crypto => golang.org/x/crypto v0.14.0 // CVE-2021-43565
-	golang.org/x/net => golang.org/x/net v0.17.0 // CVE-2023-39325
-	golang.org/x/text => golang.org/x/text v0.13.0 // CVE-2022-32149
-	google.golang.org/protobuf => google.golang.org/protobuf v1.33.0 // CVE-2024-24786; >=v1.33.0
 	open-cluster-management.io/config-policy-controller => github.com/stolostron/config-policy-controller v0.0.0-20240302002113-682625a741d5
 	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator v0.0.0-20240304152706-a48944bebe8f
 	open-cluster-management.io/multicloud-operators-subscription => github.com/stolostron/multicloud-operators-subscription v1.2.4-0-20211122-7277a37.0.20240221162634-04f365f952d3
