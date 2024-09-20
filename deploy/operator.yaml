@@ -99,6 +99,14 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - namespaces
+  verbs:
+  - create
+  - get
+  - list
+- apiGroups:
+  - ""
+  resources:
   - pods
   verbs:
   - get

@@ -29,6 +29,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	extensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	extensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -74,6 +75,8 @@ import (
 	"open-cluster-management.io/governance-policy-framework-addon/tool"
 	"open-cluster-management.io/governance-policy-framework-addon/version"
 )
+
+// +kubebuilder:rbac:groups=core,resources=namespaces,verbs=create;list;get
 
 var (
 	eventsScheme        = k8sruntime.NewScheme()
@@ -296,6 +299,12 @@ func main() {
 
 	mainCtx := ctrl.SetupSignalHandler()
 	mgrCtx, mgrCtxCancel := context.WithCancel(mainCtx)
+
+	err = createOcmNamespace(mgrCtx, managedCfg, hubCfg)
+	if err != nil {
+		log.Error(err, "Failed to create 'open-cluster-management-policies' namespace, "+
+			"Please create this namespace manually or it is hosted mode")
+	}
 
 	mgr := getManager(mgrOptionsBase, mgrHealthAddr, hubCfg, managedCfg)
 
@@ -775,6 +784,44 @@ func getFreeLocalAddr() (string, error) {
 	defer l.Close()
 
 	return fmt.Sprintf("127.0.0.1:%d", l.Addr().(*net.TCPAddr).Port), nil
+}
+
+// createOcmNamespace create open-cluster-management-policies namespace
+// on the managedClusters and hubCluster for standalone policies
+func createOcmNamespace(mgrCtx context.Context, managedClient *rest.Config,
+	hubClient *rest.Config,
+) error {
+	clientsetManaged, err := kubernetes.NewForConfig(managedClient)
+	if err != nil {
+		return err
+	}
+
+	_, err = clientsetManaged.CoreV1().Namespaces().
+		Create(mgrCtx,
+			&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "open-cluster-management-policies"}},
+			metav1.CreateOptions{})
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
+		return err
+	}
+
+	// Failed to create the namespace on the managed cluster when it is hosted mode.
+	// As a result, the namespace will not be created on the hub cluster.
+	clientsetHub, err := kubernetes.NewForConfig(hubClient)
+	if err != nil {
+		return err
+	}
+
+	_, err = clientsetHub.CoreV1().Namespaces().
+		Create(mgrCtx,
+			&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "open-cluster-management-policies"}},
+			metav1.CreateOptions{})
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
+		return err
+	}
+
+	log.Info("open-cluster-management-policies Namespace is created")
+
+	return nil
 }
 
 // addControllers sets up all controllers with their respective managers

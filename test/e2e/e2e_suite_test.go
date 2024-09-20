@@ -118,6 +118,19 @@ var _ = BeforeSuite(func() {
 	defaultImageRegistry = "quay.io/stolostron"
 	testNamespace = "managed"
 	defaultTimeoutSeconds = 30
+
+	By("Check open-cluster-management-policies on the managed cluster")
+	ocmManaged, nsErr := clientManaged.CoreV1().Namespaces().Get(context.TODO(),
+		"open-cluster-management-policies", metav1.GetOptions{})
+	Expect(nsErr).ShouldNot(HaveOccurred())
+	Expect(ocmManaged).ShouldNot(BeNil())
+
+	By("Check open-cluster-management-policies on the hub cluster")
+	ocmhub, nsErr := clientHub.CoreV1().Namespaces().Get(context.TODO(),
+		"open-cluster-management-policies", metav1.GetOptions{})
+	Expect(nsErr).ShouldNot(HaveOccurred())
+	Expect(ocmhub).ShouldNot(BeNil())
+
 	By("Create Namespace if needed")
 
 	if os.Getenv("E2E_CLUSTER_NAMESPACE_ON_HUB") == "" {
