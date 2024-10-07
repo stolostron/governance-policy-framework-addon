@@ -53,6 +53,7 @@ jobs:
         git diff --exit-code
         make lint
         make gosec-scan
+        cat gosec.json
 
     - name: Verify deploy/operator.yaml
       run: |
@@ -91,13 +92,16 @@ jobs:
       run: |
         make e2e-test-uninstall-coverage
 
+    - name: Set up Go 1.22 just for coverage reports
+      uses: actions/setup-go@v3
+      with:  
+        go-version: '1.22'
+
     - name: Test Coverage and Report Generation
       if: ${{ matrix.kind == 'latest' }}
       run: |
         make test-coverage | tee report_unit.json
         make coverage-verify
-        make gosec-scan
-        cat gosec.json
 
     - name: Store the GitHub triggering event for the sonarcloud workflow
       if: |
