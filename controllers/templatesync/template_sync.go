@@ -1145,7 +1145,7 @@ func (r *PolicyReconciler) cleanUpExcessTemplates(
 				}
 				// Log and ignore other errors to allow cleanup to continue since Gatekeeper may not be installed
 			} else if apimeta.IsNoMatchError(err) {
-				reqLogger.Info("The ConstraintTemplate CRD is not installed")
+				log.Info("The ConstraintTemplate CRD is not installed")
 				r.setCreatedGkConstraint(false)
 			} else {
 				reqLogger.Info(fmt.Sprintf("Ignoring ConstraintTemplate cleanup error: %s", err.Error()))
