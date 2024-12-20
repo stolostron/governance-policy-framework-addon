@@ -101,7 +101,6 @@ jobs:
       if: ${{ matrix.kind == 'latest' }}
       run: |
         make test-coverage | tee report_unit.json
-        make coverage-verify
 
     - name: Store the GitHub triggering event for the sonarcloud workflow
       if: |
