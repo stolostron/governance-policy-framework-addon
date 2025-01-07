@@ -26,7 +26,14 @@ RUN  /usr/local/bin/user_setup
 
 ENTRYPOINT ["/usr/local/bin/entrypoint"]
 
-RUN microdnf update -y && \
-    microdnf clean all
-
 USER ${USER_UID}
+
+LABEL name="rhacm2/acm-governance-policy-framework-addon-rhel9"
+LABEL summary="Coordinate Policy status and propagation"
+LABEL description="Coordinate Policy status and spec syncing, handling: \
+    - Policy syncing between the hub and managed cluster \
+    - Policy syncing between the Policy and the Policy's embedded policies handled by policy controllers on the cluster"
+LABEL io.k8s.display-name="Governance policy framework addon"
+LABEL io.k8s.description="Coordinate Policy status and propagation, handling Policy syncing between the hub and managed cluster, and Policy syncing between the Policy and its embedded policies handled by controllers on the cluster."
+LABEL com.redhat.component="acm-governance-policy-framework-addon-container"
+LABEL io.openshift.tags="data,images"
