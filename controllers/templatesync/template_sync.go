@@ -540,6 +540,8 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 				overrideRemediationAction(instance, tObjectUnstructured)
 
+				tObjectUnstructured.SetNamespace(resourceNs)
+
 				eObject, err = res.Create(ctx, tObjectUnstructured, metav1.CreateOptions{})
 				if err != nil {
 					multiTemplateRegExp := regexp.MustCompile(
