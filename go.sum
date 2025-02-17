@@ -183,8 +183,8 @@ github.com/stoewer/go-strcase v1.3.0 h1:g0eASXYtp+yvN9fK8sH94oCIk0fau9uV1/ZdJ0AV
 github.com/stoewer/go-strcase v1.3.0/go.mod h1:fAH5hQ5pehh+j3nZfvwdk2RgEgQjAoM8wodgtPmh1xo=
 github.com/stolostron/config-policy-controller v0.0.0-20240702170938-878e3623cdfb h1:HB8seRiPHlzXtaoPPO/NjLVF9X8cRiRMt5+2JKM0l4Q=
 github.com/stolostron/config-policy-controller v0.0.0-20240702170938-878e3623cdfb/go.mod h1:aYof894Zrs2v4ngzo/nUCu1nN6Uw5C1KajN+fAtB6zM=
-github.com/stolostron/go-log-utils v0.1.2 h1:7l1aJWvBqU2+DUyimcslT5SJpdygVY/clRDmX5sO29c=
-github.com/stolostron/go-log-utils v0.1.2/go.mod h1:8zrB8UJmp1rXhv3Ck9bBl5SpNfKk3SApeElbo96YRtQ=
+github.com/stolostron/go-log-utils v0.1.3 h1:AKcM2z9updcnfQT5Zp5n3t0K4FEV6yHa5mdz7CgJzzE=
+github.com/stolostron/go-log-utils v0.1.3/go.mod h1:P3KFqzZFTDSf365V7l8VSw6NfgalViC1/lPjJw0dt+M=
 github.com/stolostron/go-template-utils/v4 v4.3.0 h1:Y+cPU2W1p+AaFeo2+XmbfW/3f0cT2pLjIvwkLhtlSXg=
 github.com/stolostron/go-template-utils/v4 v4.3.0/go.mod h1:jobuwLWM11g9bXD2dA8HH/Y20jo9oksgCxHwBuMwB78=
 github.com/stolostron/governance-policy-propagator v0.0.0-20240702182532-a738f9b981ea h1:wnaaKwUE0KrFat+/jqdXHMmpAnStuxOVxELqD+3cnpQ=
