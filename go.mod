@@ -112,6 +112,6 @@ require (
 replace (
 	github.com/imdario/mergo => github.com/imdario/mergo v0.3.16 // Replaced so that 'go get -u' works. Remove/bump when upgrading.
 	open-cluster-management.io/config-policy-controller => github.com/stolostron/config-policy-controller v0.0.0-20240302002113-682625a741d5
-	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator v0.0.0-20240304152706-a48944bebe8f
+	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator a187cbbfa166
 	open-cluster-management.io/multicloud-operators-subscription => github.com/stolostron/multicloud-operators-subscription v1.2.4-0-20211122-7277a37.0.20240221162634-04f365f952d3
 )
