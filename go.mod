@@ -119,6 +119,6 @@ require (
 
 replace (
 	open-cluster-management.io/config-policy-controller => github.com/stolostron/config-policy-controller v0.0.0-20240702170938-878e3623cdfb
-	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator v0.0.0-20240702182532-a738f9b981ea
+	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator 9680957d2903
 	open-cluster-management.io/multicloud-operators-subscription => github.com/stolostron/multicloud-operators-subscription v1.2.4-0-20211122-7277a37.0.20240523030503-8db21b6fcbe9
 )
