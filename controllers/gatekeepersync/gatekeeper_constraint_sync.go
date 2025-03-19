@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -49,7 +50,7 @@ var (
 )
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *GatekeeperConstraintReconciler) SetupWithManager(mgr ctrl.Manager, constraintEvents *source.Channel) error {
+func (r *GatekeeperConstraintReconciler) SetupWithManager(mgr ctrl.Manager, constraintEvents source.Source) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&policyv1.Policy{}).
 		WithEventFilter(policyPredicates()).
@@ -118,7 +119,7 @@ func (r *GatekeeperConstraintReconciler) Reconcile(
 		if k8serrors.IsNotFound(err) {
 			log.Info("The Policy was deleted. Cleaning up watchers and status message cache.")
 
-			r.lastSentMessages.Range(func(key, value any) bool {
+			r.lastSentMessages.Range(func(key, _ any) bool {
 				keyTyped := key.(policyKindName)
 				if keyTyped.Policy == request.Name {
 					r.lastSentMessages.Delete(keyTyped)
@@ -167,7 +168,7 @@ func (r *GatekeeperConstraintReconciler) Reconcile(
 			log.Error(
 				err,
 				"The policy template is invalid. Skipping this policy template.",
-				"policyTemplateIndex", fmt.Sprintf("%d", templateIndex),
+				"policyTemplateIndex", strconv.Itoa(templateIndex),
 			)
 
 			continue
@@ -313,7 +314,7 @@ func (r *GatekeeperConstraintReconciler) Reconcile(
 	}
 
 	// Clear the status message cache for any removed constraints in the policy since the last reconcile
-	r.lastSentMessages.Range(func(key, value any) bool {
+	r.lastSentMessages.Range(func(key, _ any) bool {
 		keyTyped := key.(policyKindName)
 		if keyTyped.Policy == policy.Name && !constraintsSet[keyTyped] {
 			r.lastSentMessages.Delete(keyTyped)

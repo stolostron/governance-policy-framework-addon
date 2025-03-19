@@ -62,7 +62,7 @@ var (
 )
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager, additionalSource *source.Channel) error {
+func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager, additionalSource source.Source) error {
 	builder := ctrl.NewControllerManagedBy(mgr).
 		For(&policiesv1.Policy{}).
 		Watches(
@@ -216,8 +216,6 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 	rgx := regexp.MustCompile(`(?i)^policy:\s*(?:([a-z0-9.-]+)\s*\/)?(.+)`)
 
 	for _, event := range eventList.Items {
-		// This reassignment is required so that the proper event is stored in eventHistory.
-		event := event
 		// sample event.Reason -- reason: 'policy: calamari/policy-grc-rbactest-example'
 		reason := rgx.FindString(event.Reason)
 		// Only handle events that match the UID of the current Policy
@@ -405,16 +403,20 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 	// one violation found in status of one template, set overall compliancy to NonCompliant
 	isCompliant := true
 
+Loop:
 	for _, dpt := range newStatus.Details {
-		if dpt.ComplianceState == "NonCompliant" {
+		switch dpt.ComplianceState {
+		case policiesv1.NonCompliant:
 			instance.Status.ComplianceState = policiesv1.NonCompliant
 			isCompliant = false
 
-			break
-		} else if dpt.ComplianceState == "Pending" {
+			break Loop
+		case policiesv1.Pending:
 			instance.Status.ComplianceState = policiesv1.Pending
 			isCompliant = false
-		} else if dpt.ComplianceState == "" {
+		case policiesv1.Compliant: // Continue if the status is compliant, no need to update the compliance state
+			continue Loop
+		case "":
 			isCompliant = false
 		}
 	}
