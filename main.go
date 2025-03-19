@@ -266,10 +266,12 @@ func main() {
 			}
 		} else {
 			log.Info("Starting lease controller to report status")
+
 			generatedClient := kubernetes.NewForConfigOrDie(managedCfg)
 			leaseUpdater := lease.NewLeaseUpdater(
 				generatedClient, "governance-policy-framework", operatorNs,
 			).WithHubLeaseConfig(hubCfg, tool.Options.ClusterNamespaceOnHub)
+
 			go leaseUpdater.Start(ctx)
 		}
 	} else {
@@ -663,9 +665,7 @@ func startHealthProxy(ctx context.Context, wg *sync.WaitGroup) error {
 	}
 
 	for _, endpoint := range []string{"/healthz", "/readyz"} {
-		endpoint := endpoint
-
-		http.HandleFunc(endpoint, func(w http.ResponseWriter, r *http.Request) {
+		http.HandleFunc(endpoint, func(w http.ResponseWriter, _ *http.Request) {
 			healthAddressesLock.RLock()
 			addresses := make([]string, 0, len(healthAddresses))
 
@@ -678,17 +678,17 @@ func startHealthProxy(ctx context.Context, wg *sync.WaitGroup) error {
 
 			for _, address := range addresses {
 				req, err := http.NewRequestWithContext(
-					ctx, http.MethodGet, fmt.Sprintf("http://%s%s", address, endpoint), nil,
+					ctx, http.MethodGet, "http://"+address+endpoint, nil,
 				)
 				if err != nil {
-					http.Error(w, fmt.Sprintf("manager: %s", err.Error()), http.StatusInternalServerError)
+					http.Error(w, "manager: "+err.Error(), http.StatusInternalServerError)
 
 					return
 				}
 
 				resp, err := httpClient.Do(req)
 				if err != nil {
-					http.Error(w, fmt.Sprintf("manager: %s", err.Error()), http.StatusInternalServerError)
+					http.Error(w, "manager: "+err.Error(), http.StatusInternalServerError)
 
 					return
 				}
@@ -715,7 +715,7 @@ func startHealthProxy(ctx context.Context, wg *sync.WaitGroup) error {
 
 			_, err := io.WriteString(w, "ok")
 			if err != nil {
-				http.Error(w, fmt.Sprintf("manager: %s", err.Error()), http.StatusInternalServerError)
+				http.Error(w, "manager: "+err.Error(), http.StatusInternalServerError)
 			}
 		})
 	}
@@ -779,9 +779,9 @@ func addControllers(
 	// Set up all controllers for manager on managed cluster
 	var hubClient client.Client
 	var specSyncRequests chan event.GenericEvent
-	var specSyncRequestsSource *source.Channel
+	var specSyncRequestsSource source.Source
 	var statusSyncRequests chan event.GenericEvent
-	var statusSyncRequestsSource *source.Channel
+	var statusSyncRequestsSource source.Source
 
 	if hubMgr == nil {
 		hubCache, err := cache.New(hubCfg,
@@ -953,7 +953,7 @@ func manageGatekeeperSyncManager(
 	dynamicClient dynamic.Interface,
 	mgrOptions manager.Options,
 ) {
-	fieldSelector := fmt.Sprintf("metadata.name=constrainttemplates.%s", utils.GvkConstraintTemplate.Group)
+	fieldSelector := "metadata.name=constrainttemplates." + utils.GvkConstraintTemplate.Group
 	timeout := int64(30)
 	crdGVR := schema.GroupVersionResource{
 		Group:    "apiextensions.k8s.io",
@@ -966,6 +966,8 @@ func manageGatekeeperSyncManager(
 	var watcher *watch.RetryWatcher
 	var mgrRunning bool
 	var gatekeeperInstalled bool
+
+	mgrCtx, mgrCtxCancel = context.WithCancel(ctx)
 
 	for {
 		if watcher == nil {
@@ -1004,8 +1006,6 @@ func manageGatekeeperSyncManager(
 			mgrRunning = true
 
 			wg.Add(1)
-
-			mgrCtx, mgrCtxCancel = context.WithCancel(ctx)
 
 			// Keep retrying to start the Gatekeeper sync manager until mgrCtx closes.
 			go func(ctx context.Context) {
