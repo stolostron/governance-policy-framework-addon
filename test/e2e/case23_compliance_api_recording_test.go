@@ -66,7 +66,7 @@ var _ = Describe("Compliance API recording", Ordered, Label("compliance-events-a
 	lock := sync.RWMutex{}
 	requests := []*complianceeventsapi.ComplianceEvent{}
 
-	BeforeAll(func(ctx context.Context) {
+	BeforeAll(func() {
 		mux := http.NewServeMux()
 
 		complianceAPIURL := os.Getenv("COMPLIANCE_API_URL")
@@ -220,7 +220,7 @@ var _ = Describe("Compliance API recording", Ordered, Label("compliance-events-a
 		).Should(Succeed())
 	})
 
-	It("Forwards a disabled compliance event to the compliance API", func(ctx context.Context) {
+	It("Forwards a disabled compliance event to the compliance API", func() {
 		By("Renaming the configuration policy in the parent policy")
 		hubApplyPolicy("case23", yamlPath2)
 
@@ -242,7 +242,7 @@ var _ = Describe("Compliance API recording", Ordered, Label("compliance-events-a
 		).Should(Succeed())
 	})
 
-	It("Forwards a disabled compliance event to the compliance API", func(ctx context.Context) {
+	It("Forwards a disabled compliance event to the compliance API", func() {
 		By("Deleting the parent policy")
 		_, err := kubectlHub("delete", "-f", yamlPath2, "-n", clusterNamespaceOnHub)
 		Expect(err).ToNot(HaveOccurred())
@@ -267,7 +267,7 @@ var _ = Describe("Compliance API recording", Ordered, Label("compliance-events-a
 		).Should(Succeed())
 	})
 
-	It("Forwards a template error compliance event with an invalid policy template", func(ctx context.Context) {
+	It("Forwards a template error compliance event with an invalid policy template", func() {
 		By("Creating the parent policy")
 		_, err := kubectlHub("apply", "-f", yamlPath3, "-n", clusterNamespaceOnHub)
 		Expect(err).ToNot(HaveOccurred())
