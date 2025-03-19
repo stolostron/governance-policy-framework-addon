@@ -34,7 +34,7 @@ const ControllerName string = "policy-spec-sync"
 var log = logf.Log.WithName(ControllerName)
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager, additionalSource *source.Channel) error {
+func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager, additionalSource source.Source) error {
 	builder := ctrl.NewControllerManagedBy(mgr).
 		For(&policiesv1.Policy{}).
 		Named(ControllerName).
