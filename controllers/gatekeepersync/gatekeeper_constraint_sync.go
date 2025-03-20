@@ -380,7 +380,7 @@ func (r *GatekeeperConstraintReconciler) sendComplianceEvent(
 
 		reason := utils.EventReason(constraint.GetNamespace(), constraint.GetName())
 
-		err := r.SendEvent(ctx, constraint, owner, reason, msg, compliance)
+		err := r.ComplianceEventSender.SendEvent(ctx, constraint, owner, reason, msg, compliance)
 		if err != nil {
 			return err
 		}
