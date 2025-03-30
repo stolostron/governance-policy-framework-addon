@@ -11,7 +11,7 @@ require (
 	github.com/prometheus/client_golang v1.19.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stolostron/go-log-utils v0.1.2
-	github.com/stolostron/kubernetes-dependency-watches v0.10.0
+	github.com/stolostron/kubernetes-dependency-watches v0.10.1
 	golang.org/x/mod v0.17.0
 	k8s.io/api v0.31.1
 	k8s.io/apiextensions-apiserver v0.31.0
@@ -83,10 +83,10 @@ require (
 	golang.org/x/exp v0.0.0-20240525044651-4c93da0ed11d // indirect
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.27.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/term v0.27.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/term v0.29.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
@@ -111,7 +111,7 @@ require (
 )
 
 replace (
-	open-cluster-management.io/config-policy-controller => github.com/stolostron/config-policy-controller v0.0.0-20240702170938-878e3623cdfb
+	open-cluster-management.io/config-policy-controller => github.com/stolostron/config-policy-controller v0.0.0-20250327144735-74f650f1fa41
 	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator v0.0.0-20250321141426-4148304ca158
 	open-cluster-management.io/multicloud-operators-subscription => github.com/stolostron/multicloud-operators-subscription v1.2.4-0-20211122-7277a37.0.20240523030503-8db21b6fcbe9
 )
