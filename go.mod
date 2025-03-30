@@ -12,7 +12,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stolostron/go-log-utils v0.1.2
 	github.com/stolostron/kubernetes-dependency-watches v0.10.0
-	golang.org/x/mod v0.17.0
+	golang.org/x/mod v0.24.0
 	k8s.io/api v0.31.1
 	k8s.io/apiextensions-apiserver v0.31.0
 	k8s.io/apimachinery v0.31.1
