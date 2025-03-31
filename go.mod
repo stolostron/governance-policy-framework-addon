@@ -75,7 +75,7 @@ require (
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/stolostron/go-template-utils/v4 v4.0.1-0.20231212190701-4dc096ec1b40 // indirect
-	github.com/stolostron/rbac-api-utils v0.0.0-20240227203157-d0f039286f99 // indirect
+	github.com/stolostron/rbac-api-utils v0.0.0-20240404212618-7f57fc664256 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
