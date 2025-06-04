@@ -94,5 +94,5 @@ markers or any of the Kustomize files, you may regenerate `deploy/operator.yaml`
   visit: [open-cluster-management.io](https://open-cluster-management.io).
 
 <!---
-Date: 07/03/2024
+Date: 06/04/2024
 -->
