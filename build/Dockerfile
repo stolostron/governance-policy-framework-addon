@@ -1,3 +1,5 @@
+ARG ACM_VERSION=${ACM_VERSION}
+
 # Stage 1: Use image builder to build the target binaries
 # Copyright Contributors to the Open Cluster Management project
 
@@ -37,3 +39,4 @@ LABEL io.k8s.display-name="Governance policy framework addon"
 LABEL io.k8s.description="Coordinate Policy status and propagation, handling Policy syncing between the hub and managed cluster, and Policy syncing between the Policy and its embedded policies handled by controllers on the cluster."
 LABEL com.redhat.component="acm-governance-policy-framework-addon-container"
 LABEL io.openshift.tags="data,images"
+LABEL cpe="cpe:/a:redhat:acm:${ACM_VERSION}::el9"

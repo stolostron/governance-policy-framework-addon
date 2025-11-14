@@ -1,3 +1,5 @@
+ARG ACM_VERSION=${ACM_VERSION}
+
 # Stage 1: Use image builder to build the target binaries
 # Copyright Contributors to the Open Cluster Management project
 
@@ -38,3 +40,4 @@ LABEL io.k8s.description="Coordinate Policy status and propagation, handling Pol
 LABEL com.redhat.component="acm-governance-policy-framework-addon-container"
 LABEL io.openshift.tags="data,images"
 LABEL url="https://github.com/stolostron/governance-policy-framework-addon"
+LABEL cpe="cpe:/a:redhat:acm:${ACM_VERSION}::el9"
