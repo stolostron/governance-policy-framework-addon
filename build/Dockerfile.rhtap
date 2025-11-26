@@ -38,3 +38,4 @@ LABEL io.k8s.description="Coordinate Policy status and propagation, handling Pol
 LABEL com.redhat.component="acm-governance-policy-framework-addon-container"
 LABEL io.openshift.tags="data,images"
 LABEL url="https://github.com/stolostron/governance-policy-framework-addon"
+LABEL cpe="cpe:/a:redhat:acm:2.15::el9"
