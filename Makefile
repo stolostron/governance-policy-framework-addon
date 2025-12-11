@@ -52,6 +52,7 @@ E2E_FILTER = --label-filter="!compliance-events-api"
 ifeq ($(KIND_VERSION), minimum)
 	KIND_ARGS = --image kindest/node:v1.19.16
 	E2E_FILTER = --label-filter="!skip-minimum && !compliance-events-api"
+	export DISABLE_GK_SYNC = true
 else ifneq ($(KIND_VERSION), latest)
 	KIND_ARGS = --image kindest/node:$(KIND_VERSION)
 else
