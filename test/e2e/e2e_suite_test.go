@@ -4,6 +4,7 @@
 package e2e
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -56,6 +57,7 @@ var (
 
 	defaultImageRegistry string
 
+	eventCtx           context.Context
 	managedRecorder    record.EventRecorder
 	managedEventSender utils.ComplianceEventSender
 )
@@ -160,6 +162,10 @@ var _ = BeforeSuite(func(ctx SpecContext) {
 	}
 	By("Create EventRecorder")
 	var err error
+	eventCtx = context.TODO()
+	DeferCleanup(func() {
+		eventCtx.Done()
+	})
 	managedRecorder, err = testutils.CreateRecorder(clientManaged, "status-sync-controller-test")
 	Expect(err).ToNot(HaveOccurred())
 
