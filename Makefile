@@ -186,7 +186,8 @@ kind-deploy-controller-dev-normal: kind-deploy-controller
 kind-deploy-controller-dev-addon:
 	@echo Hosted mode test
 	kind load docker-image $(REGISTRY)/$(IMG):$(TAG) --name $(KIND_NAME)
-	kubectl annotate -n $(subst -hosted,,$(KIND_NAMESPACE)) --overwrite managedclusteraddon governance-policy-framework\
+	kubectl get managedclusteraddon -A
+	kubectl annotate -n $(subst klusterlet-,,$(KIND_NAMESPACE)) --overwrite managedclusteraddon governance-policy-framework\
 		addon.open-cluster-management.io/values='{"global":{"imagePullPolicy": "Never", "imageOverrides":{"governance_policy_framework_addon": "$(REGISTRY)/$(IMG):$(TAG)"}}}'
 
 .PHONY: kind-create-all-clusters
