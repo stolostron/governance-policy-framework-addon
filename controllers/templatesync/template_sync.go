@@ -9,7 +9,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -331,9 +333,7 @@ func (r *PolicyReconciler) Reconcile(ctx context.Context, request reconcile.Requ
 
 		// use copy of dependencies scoped only to this template
 		templateDeps := make(map[depclient.ObjectIdentifier]string)
-		for k, v := range topLevelDeps {
-			templateDeps[k] = v
-		}
+		maps.Copy(templateDeps, topLevelDeps)
 
 		for _, dep := range policyT.ExtraDependencies {
 			depID := depclient.ObjectIdentifier{
@@ -1005,7 +1005,7 @@ func equivalentTemplates(
 		objectTemplates, _, _ := unstructured.NestedSlice(tObject.Object, "spec", "object-templates")
 
 		for i := range objectTemplates {
-			objectTemplate, ok := objectTemplates[i].(map[string]interface{})
+			objectTemplate, ok := objectTemplates[i].(map[string]any)
 			if !ok {
 				continue
 			}
@@ -1107,9 +1107,7 @@ func (r *PolicyReconciler) setDefaultTemplateLabels(instance *policiesv1.Policy,
 		common.ClusterNamespaceLabel: r.ClusterNamespace,
 	}
 
-	for key, label := range desiredLabels {
-		labels[key] = label
-	}
+	maps.Copy(labels, desiredLabels)
 
 	return labels
 }
@@ -1293,17 +1291,7 @@ func (r *PolicyReconciler) cleanUpExcessTemplates(
 
 		for _, tmpl := range children.Items {
 			// delete all templates with policy label that aren't still in the policy
-			found := false
-
-			for _, parentTmplName := range templateNames {
-				if parentTmplName == tmpl.GetName() {
-					found = true
-
-					break
-				}
-			}
-
-			if !found {
+			if !slices.Contains(templateNames, tmpl.GetName()) {
 				err := resClient.Delete(ctx, tmpl.GetName(), metav1.DeleteOptions{})
 				if err != nil {
 					errorList = append(errorList,
@@ -1454,7 +1442,7 @@ func overrideRemediationAction(instance *policiesv1.Policy, tObjectUnstructured 
 		}
 
 		if spec, ok := tObjectUnstructured.Object["spec"]; ok {
-			if specObject, ok := spec.(map[string]interface{}); ok {
+			if specObject, ok := spec.(map[string]any); ok {
 				specObject["enforcementAction"] = enforcementAction
 			}
 		}
@@ -1470,7 +1458,7 @@ func overrideRemediationAction(instance *policiesv1.Policy, tObjectUnstructured 
 		return
 	}
 
-	specObject, ok := spec.(map[string]interface{})
+	specObject, ok := spec.(map[string]any)
 	if !ok {
 		return
 	}
@@ -1706,13 +1694,7 @@ func (r *PolicyReconciler) hasPolicyTemplateLabel(
 // hasClusterwideFinalizer returns a boolean for whether a policy has a clusterwide finalizer,
 // signaling that the controller needs to handle manual cleanup of clusterwide objects.
 func hasClusterwideFinalizer(pol *policiesv1.Policy) bool {
-	for _, finalizer := range pol.Finalizers {
-		if finalizer == utils.ClusterwideFinalizer {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(pol.Finalizers, utils.ClusterwideFinalizer)
 }
 
 // removeFinalizer iterates over the finalizers and removes the finalizer specified from the policy.
