@@ -31,6 +31,7 @@ var _ = Describe("Test disabled Gatekeeper sync", Ordered, Label("skip-minimum")
 	AfterAll(func() {
 		for _, pName := range []string{policyName} {
 			By("Deleting policy " + pName + " on the hub in ns:" + clusterNamespaceOnHub)
+
 			err := clientHubDynamic.Resource(gvrPolicy).Namespace(clusterNamespaceOnHub).Delete(
 				context.TODO(), pName, metav1.DeleteOptions{},
 			)
@@ -73,10 +74,11 @@ var _ = Describe("Test disabled Gatekeeper sync", Ordered, Label("skip-minimum")
 			details, _, err := unstructured.NestedSlice(plc.Object, "status", "details")
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(details).ToNot(BeEmpty())
-			history, _, err := unstructured.NestedSlice(details[0].(map[string]interface{}), "history")
+
+			history, _, err := unstructured.NestedSlice(details[0].(map[string]any), "history")
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(history).ToNot(BeEmpty())
-			message, _, err := unstructured.NestedString(history[0].(map[string]interface{}), "message")
+			message, _, err := unstructured.NestedString(history[0].(map[string]any), "message")
 			g.Expect(err).ToNot(HaveOccurred())
 			g.Expect(message).To(ContainSubstring("the Gatekeeper integration is disabled"))
 		}, defaultTimeoutSeconds, 1).Should(Succeed())

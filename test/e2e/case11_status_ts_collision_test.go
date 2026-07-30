@@ -119,6 +119,7 @@ var _ = Describe("Test event sorting by name when timestamps collide", Ordered, 
 			ctx, case11PolicyName, metav1.GetOptions{},
 		)
 		Expect(err).ShouldNot(HaveOccurred())
+
 		managedUID = managedPlc.GetUID()
 
 		Expect(case11Event(
@@ -192,6 +193,7 @@ var _ = Describe("Test event sorting by eventtime when timestamps collide", Orde
 			ctx, case11PolicyName, metav1.GetOptions{},
 		)
 		Expect(err).ShouldNot(HaveOccurred())
+
 		managedUID = managedPlc.GetUID()
 
 		Expect(case11Event(

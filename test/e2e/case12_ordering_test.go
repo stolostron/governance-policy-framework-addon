@@ -30,10 +30,10 @@ func generateEventOnPolicy(plcName string, cfgPlcName string, msg string, compli
 	Expect(managedPlc).NotTo(BeNil())
 
 	configPlc := unstructured.Unstructured{
-		Object: map[string]interface{}{
+		Object: map[string]any{
 			"apiVersion": gvrConfigurationPolicy.GroupVersion().String(),
 			"kind":       "ConfigurationPolicy",
-			"metadata": map[string]interface{}{
+			"metadata": map[string]any{
 				"name":      cfgPlcName,
 				"namespace": clusterNamespace,
 				"uid":       uuid.NewUUID(),
@@ -87,6 +87,7 @@ var _ = Describe("Test dependency logic in template sync", Ordered, func() {
 
 	AfterEach(func() {
 		By("clean up all events")
+
 		_, err := kubectlManaged("delete", "events", "-n", clusterNamespace, "--all")
 		Expect(err).ShouldNot(HaveOccurred())
 	})
