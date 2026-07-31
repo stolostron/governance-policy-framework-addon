@@ -4,6 +4,7 @@
 package utils
 
 import (
+	"context"
 	"os/exec"
 	"strings"
 
@@ -27,12 +28,12 @@ func CreateRecorder(kubeClient kubernetes.Interface, componentName string) (reco
 	return eventBroadcaster.NewRecorder(eventsScheme, v1.EventSource{Component: componentName}), nil
 }
 
-// getMetrics curls the metrics endpoint, filters the response with the given patterns,
+// GetMetrics getMetrics curls the metrics endpoint, filters the response with the given patterns,
 // and returns the value(s) for the matching metric(s).
 func GetMetrics(metricPatterns ...string) []string {
 	metricFilter := " | grep " + strings.Join(metricPatterns, " | grep ")
 	metricsCmd := `curl localhost:8383/metrics` + metricFilter
-	cmd := exec.Command("bash", "-c", metricsCmd)
+	cmd := exec.CommandContext(context.Background(), "bash", "-c", metricsCmd)
 
 	matchingMetricsRaw, err := cmd.Output()
 	if err != nil {

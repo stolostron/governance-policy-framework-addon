@@ -24,7 +24,7 @@ import (
 
 const (
 	ControllerName = "secret-sync"
-	// #nosec G101
+	// SecretName #nosec G101
 	SecretName = "policy-encryption-key"
 )
 
