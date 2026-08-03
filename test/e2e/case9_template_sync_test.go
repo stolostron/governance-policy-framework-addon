@@ -165,6 +165,7 @@ var _ = Describe("Test IamPolicy", func() {
 		By("Deleting a policy on the hub in ns:" + clusterNamespaceOnHub)
 		_, err := kubectlHub("delete", "-f", case9PolicyYaml, "-n", clusterNamespaceOnHub, "--ignore-not-found")
 		Expect(err).ShouldNot(HaveOccurred())
+
 		opt := metav1.ListOptions{
 			FieldSelector: "metadata.name=" + case9PolicyName,
 		}
@@ -183,7 +184,7 @@ var _ = Describe("Test IamPolicy", func() {
 			defaultTimeoutSeconds)
 	})
 	It("should have a non-support event for IamPolicy", func() {
-		Consistently(func() interface{} {
+		Consistently(func() any {
 			_, err := clientHubDynamic.Resource(gvrIamPolicy).Namespace(clusterNamespace).
 				Get(context.TODO(), case9IamPolicyName, metav1.GetOptions{})
 
