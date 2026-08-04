@@ -19,7 +19,7 @@ require (
 	k8s.io/client-go v0.35.7
 	k8s.io/klog/v2 v2.130.1
 	open-cluster-management.io/addon-framework v1.3.0
-	open-cluster-management.io/config-policy-controller v0.19.0
+	open-cluster-management.io/config-policy-controller v0.19.1-0.20260713183034-154ac0b4da4a
 	open-cluster-management.io/governance-policy-propagator v0.19.0
 	sigs.k8s.io/controller-runtime v0.23.3
 )
@@ -117,8 +117,8 @@ require (
 )
 
 replace (
-	open-cluster-management.io/config-policy-controller => github.com/stolostron/config-policy-controller v0.0.0-20260309173530-5ecce2307ed4
-	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator v0.0.0-20260306190115-6d7c975ce328
+	open-cluster-management.io/config-policy-controller => github.com/stolostron/config-policy-controller v0.0.0-20260717185455-b143ca8e5083
+	open-cluster-management.io/governance-policy-propagator => github.com/stolostron/governance-policy-propagator v0.0.0-20260602190728-d9fc5e918bb9
 	open-cluster-management.io/managed-serviceaccount => github.com/stolostron/managed-serviceaccount v0.1.1-0.20260227090929-f948b4aec235
 	open-cluster-management.io/multicloud-operators-subscription => github.com/stolostron/multicloud-operators-subscription v1.2.4-0-20211122-7277a37.0.20260219181901-0ecd400cd27b
 )
