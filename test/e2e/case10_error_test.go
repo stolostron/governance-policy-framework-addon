@@ -63,7 +63,7 @@ var _ = Describe("Test error handling", func() {
 		}, defaultTimeoutSeconds, 1).Should(Equal("NonCompliant"))
 
 		By("Should not create any configuration policy")
-		Consistently(func() interface{} {
+		Consistently(func() any {
 			return utils.GetWithTimeout(clientManagedDynamic, gvrConfigurationPolicy, dupConfigPolicyName,
 				testNamespace, false, defaultTimeoutSeconds)
 		}, 10, 1).Should(BeNil())
@@ -72,21 +72,22 @@ var _ = Describe("Test error handling", func() {
 		hubApplyPolicy("case10-remediation-action-not-exists",
 			yamlBasePath+"remediation-action-not-exists.yaml")
 
-		Eventually(func() interface{} {
+		Eventually(func() any {
 			trustedPlc := utils.GetWithTimeout(clientManagedDynamic, gvrConfigurationPolicy,
 				"case10-remediation-action-not-exists-configpolicy", clusterNamespace, true,
 				defaultTimeoutSeconds)
 
-			return trustedPlc.Object["spec"].(map[string]interface{})["remediationAction"]
+			return trustedPlc.Object["spec"].(map[string]any)["remediationAction"]
 		}, defaultTimeoutSeconds, 1).Should(Equal("inform"))
 
 		hubApplyPolicy("case10-remediation-action-not-exists",
 			yamlBasePath+"remediation-action-not-exists2.yaml")
 
 		By("Checking the case10-remediation-action-not-exists-configpolicy CR")
+
 		yamlTrustedPlc := utils.ParseYaml(
 			yamlBasePath + "remediation-action-not-exists-configpolicy.yaml")
-		Eventually(func() interface{} {
+		Eventually(func() any {
 			trustedPlc := utils.GetWithTimeout(clientManagedDynamic, gvrConfigurationPolicy,
 				"case10-remediation-action-not-exists-configpolicy", clusterNamespace, true,
 				defaultTimeoutSeconds)
@@ -212,6 +213,7 @@ var _ = Describe("Test error handling", func() {
 			1, true, defaultTimeoutSeconds)
 
 		By("Manually updating the status on the created configuration policy")
+
 		compliancePatch := []byte(`[{"op":"add","path":"/status","value":{"compliant":"Pending"}}]`)
 		// can't just use kubectl - status is a sub-resource
 		cfgInt := clientManagedDynamic.Resource(gvrConfigurationPolicy).Namespace(clusterNamespace)
@@ -220,6 +222,7 @@ var _ = Describe("Test error handling", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Patching the policy to make the template invalid")
+
 		errorPatch := []byte(`[{` +
 			`"op":"replace",` +
 			`"path":"/spec/policy-templates/0/objectDefinition/kind",` +
@@ -238,6 +241,7 @@ var _ = Describe("Test error handling", func() {
 		).Should(BeTrue())
 
 		By("Updating the policy status with the template-error")
+
 		statusPatch := []byte(`[{` +
 			`"op":"add",` +
 			`"path":"/status",` +
@@ -247,6 +251,7 @@ var _ = Describe("Test error handling", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		By("Checking that the complianceState is still on the configuration policy")
+
 		cfgPolicy, err := cfgInt.Get(ctx, "case10-config-policy", metav1.GetOptions{}, "status")
 		Expect(err).ToNot(HaveOccurred())
 		compState, found, err := unstructured.NestedString(cfgPolicy.Object, "status", "compliant")
@@ -273,6 +278,7 @@ var _ = Describe("Test error handling", func() {
 	Describe("testing hub template errors cases", Ordered, func() {
 		AfterEach(func(ctx SpecContext) {
 			cfgInt := clientManagedDynamic.Resource(gvrConfigurationPolicy).Namespace(clusterNamespace)
+
 			Eventually(func() error {
 				_, err := cfgInt.Patch(ctx, "case10-bad-hubtemplate-notyet", types.JSONPatchType,
 					[]byte(`[{"op":"replace","path":"/metadata/finalizers","value":[]}]`),
@@ -407,6 +413,7 @@ var _ = Describe("Test error handling", func() {
 	})
 	It("should throw a noncompliance event if the template already exists outside of a policy", func(ctx SpecContext) {
 		By("Creating the ConfigurationPolicy on the managed cluster directly")
+
 		_, err := kubectlManaged(
 			"apply",
 			"--filename="+yamlBasePath+"working-policy-configpol.yaml",

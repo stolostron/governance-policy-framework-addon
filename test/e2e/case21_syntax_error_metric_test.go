@@ -36,7 +36,9 @@ var _ = Describe("Test proper metrics handling on syntax error", Ordered, func()
 		hubApplyPolicy(policyName, errPolicyFile)
 
 		By("Checking for the " + userMetricName + " metric on the template-sync controller")
+
 		values := []string{}
+
 		Eventually(func() []string {
 			values = utils.GetMetrics(ctx, userMetricName, policyName)
 
@@ -49,7 +51,9 @@ var _ = Describe("Test proper metrics handling on syntax error", Ordered, func()
 		hubApplyPolicy(policyName, errPolicyFile)
 
 		By("Checking for the " + systemMetricName + " metric on the template-sync controller")
+
 		values := []string{}
+
 		Eventually(func() []string {
 			values = utils.GetMetrics(ctx, systemMetricName, policyName)
 
@@ -64,7 +68,9 @@ var _ = Describe("Test proper metrics handling on syntax error", Ordered, func()
 		)
 		cleanup()
 		By("Checking for the " + userMetricName + " metric on the template-sync controller")
+
 		values := []string{}
+
 		Eventually(func() []string {
 			values = utils.GetMetrics(ctx, userMetricName, policyName)
 
@@ -77,7 +83,9 @@ var _ = Describe("Test proper metrics handling on syntax error", Ordered, func()
 		hubApplyPolicy(policyName, errPolicyFile)
 
 		By("Checking for the " + userMetricName + " metric on the template-sync controller")
+
 		values := []string{}
+
 		Eventually(func() []string {
 			values = utils.GetMetrics(ctx, userMetricName, policyName)
 
@@ -90,7 +98,9 @@ var _ = Describe("Test proper metrics handling on syntax error", Ordered, func()
 		hubApplyPolicy(policyName, errPolicyFile)
 
 		By("Checking for the " + systemMetricName + " metric on the template-sync controller")
+
 		values := []string{}
+
 		Eventually(func() []string {
 			values = utils.GetMetrics(ctx, systemMetricName, policyName)
 
