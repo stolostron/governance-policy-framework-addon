@@ -24,8 +24,7 @@ import (
 
 const (
 	ControllerName = "secret-sync"
-	// SecretName #nosec G101
-	SecretName = "policy-encryption-key"
+	SecretName     = "policy-encryption-key" // #nosec G101 -- Kubernetes secret resource name, not a credential
 )
 
 var log = logf.Log.WithName(ControllerName)
