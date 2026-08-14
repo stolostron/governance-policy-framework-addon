@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="30" failures="0" errors="0" time="0.010389">
+	<testsuite tests="6" failures="0" time="0.000000" name="open-cluster-management.io/governance-policy-framework-addon/controllers/secretsync" timestamp="2026-07-13T09:20:13-07:00">
+		<properties>
+			<property name="go.version" value="go1.26.0 linux/amd64"></property>
+		</properties>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/secretsync" name="TestReconcileSecretHubOnly" time="0.050000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/secretsync" name="TestReconcileSecretHubOnlyDiffTargetNS" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/secretsync" name="TestReconcileSecretAlreadySynced" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/secretsync" name="TestReconcileSecretMismatch" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/secretsync" name="TestReconcileSecretDeletedOnHub" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/secretsync" name="TestReconcileInvalidSecretName" time="0.000000"></testcase>
+	</testsuite>
+	<testsuite tests="13" failures="0" time="0.010000" name="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" timestamp="2026-07-13T09:20:13-07:00">
+		<properties>
+			<property name="go.version" value="go1.26.0 linux/amd64"></property>
+		</properties>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" name="TestParseTimestampFromEventName" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" name="TestGetEventsInTemplate/returns_empty_list_when_template_is_missing" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" name="TestGetEventsInTemplate/returns_history_from_template_status" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" name="TestGetEventsInTemplate" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" name="TestTemplateOwnedByPolicy/Nil_template_returns_false" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" name="TestTemplateOwnedByPolicy/First_policy_owner_reference_is_used_when_multiple_are_present" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" name="TestTemplateOwnedByPolicy/Owner_reference_takes_precedence_over_parent_policy_label" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" name="TestTemplateOwnedByPolicy/Parent_policy_label_does_not_match_when_owner_reference_is_absent" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" name="TestTemplateOwnedByPolicy/Parent_policy_label_matches_when_owner_reference_is_absent" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" name="TestTemplateOwnedByPolicy/Policy_owner_reference_does_not_match_policy" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" name="TestTemplateOwnedByPolicy/Policy_owner_reference_matches_policy" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" name="TestTemplateOwnedByPolicy/Empty_template_with_no_ownership_metadata_returns_false" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/statussync" name="TestTemplateOwnedByPolicy" time="0.000000"></testcase>
+	</testsuite>
+	<testsuite tests="11" failures="0" time="0.000000" name="open-cluster-management.io/governance-policy-framework-addon/controllers/templatesync" timestamp="2026-07-13T09:20:13-07:00">
+		<properties>
+			<property name="go.version" value="go1.26.0 linux/amd64"></property>
+		</properties>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/templatesync" name="TestHandleSyncSuccessNoDoubleRemoveStatus" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/templatesync" name="TestGetDupName" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/templatesync" name="TestEquivalentTemplatesRecreateOption" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/templatesync" name="TestEquivalentTemplatesOperatorPolicyComplianceConfig" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/templatesync" name="TestEquivalentTemplatesExtraMetadata" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/templatesync" name="TestGetDepNamespace/other-with-ns" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/templatesync" name="TestGetDepNamespace/config-policy-no-ns" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/templatesync" name="TestGetDepNamespace/operator-policy-with-ns" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/templatesync" name="TestGetDepNamespace/config-policy-with-ns" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/templatesync" name="TestGetDepNamespace/operator-policy-no-ns" time="0.000000"></testcase>
+		<testcase classname="open-cluster-management.io/governance-policy-framework-addon/controllers/templatesync" name="TestGetDepNamespace" time="0.000000"></testcase>
+	</testsuite>
+</testsuites>
