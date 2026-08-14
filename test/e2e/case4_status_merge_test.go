@@ -43,6 +43,7 @@ var _ = Describe("Test status sync with multiple templates", func() {
 			clusterNamespaceOnHub,
 		)
 		Expect(err).ShouldNot(HaveOccurred())
+
 		opt := metav1.ListOptions{}
 		utils.ListWithTimeout(
 			clientHubDynamic,
@@ -59,6 +60,7 @@ var _ = Describe("Test status sync with multiple templates", func() {
 			true,
 			defaultTimeoutSeconds)
 		By("clean up all events")
+
 		_, err = kubectlManaged(
 			"delete",
 			"events",
@@ -85,7 +87,7 @@ var _ = Describe("Test status sync with multiple templates", func() {
 			"Compliant; No violation detected")
 
 		By("Checking if policy status is compliant")
-		Eventually(func() interface{} {
+		Eventually(func() any {
 			managedPlc = utils.GetWithTimeout(
 				clientManagedDynamic,
 				gvrPolicy,
@@ -131,7 +133,8 @@ var _ = Describe("Test status sync with multiple templates", func() {
 
 		By("Checking if history size = 3")
 		var plc *policiesv1.Policy
-		Eventually(func(g Gomega) interface{} {
+
+		Eventually(func(g Gomega) any {
 			managedPlc = utils.GetWithTimeout(
 				clientManagedDynamic,
 				gvrPolicy,
