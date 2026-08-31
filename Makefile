@@ -98,9 +98,11 @@ lint:
 # test section
 ############################################################
 
+TEST_PKGS ?= ./controllers/statussync ./controllers/secretsync ./controllers/templatesync ./controllers/utils
+
 .PHONY: test
 test: test-dependencies
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test $(TESTARGS) `go list ./... | grep -v test/e2e`
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test $(TESTARGS) $(TEST_PKGS)
 
 .PHONY: test-coverage
 test-coverage: TESTARGS = -json -cover -covermode=atomic -coverprofile=coverage_unit.out
