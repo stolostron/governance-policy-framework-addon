@@ -359,9 +359,7 @@ func main() {
 
 	var errorExit bool
 
-	wg.Add(1)
-
-	go func() {
+	wg.Go(func() {
 		if err := mgr.Start(mgrCtx); err != nil {
 			log.Error(err, "problem running manager")
 
@@ -370,9 +368,7 @@ func main() {
 
 			errorExit = true
 		}
-
-		wg.Done()
-	}()
+	})
 
 	operatorNs, err := tool.GetOperatorNamespace()
 
@@ -388,9 +384,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	wg.Add(1)
-
-	go func() {
+	wg.Go(func() {
 		if err := uninstall.StartWatcher(mgrCtx, mgr, operatorNs); err != nil {
 			log.Error(err, "problem running uninstall-watcher")
 
@@ -399,14 +393,10 @@ func main() {
 
 			errorExit = true
 		}
-
-		wg.Done()
-	}()
+	})
 
 	if !tool.Options.DisableSpecSync {
-		wg.Add(1)
-
-		go func() {
+		wg.Go(func() {
 			if err := hubMgr.Start(mgrCtx); err != nil {
 				log.Error(err, "problem running hub manager")
 
@@ -415,9 +405,7 @@ func main() {
 
 				errorExit = true
 			}
-
-			wg.Done()
-		}()
+		})
 	}
 
 	wg.Wait()
@@ -452,16 +440,16 @@ func getManager(
 				Namespaces: map[string]cache.Config{
 					tool.Options.ClusterNamespace: {
 						FieldSelector: eventFilter,
-						Transform: func(obj interface{}) (interface{}, error) {
+						Transform: func(obj any) (any, error) {
 							event := obj.(*v1.Event)
 							// Only cache fields that are utilized by the controllers.
 							return &v1.Event{
 								InvolvedObject: event.InvolvedObject,
 								TypeMeta:       event.TypeMeta,
 								ObjectMeta: metav1.ObjectMeta{
-									Name:      event.ObjectMeta.Name,
-									Namespace: event.ObjectMeta.Namespace,
-									UID:       event.ObjectMeta.UID,
+									Name:      event.Name,
+									Namespace: event.Namespace,
+									UID:       event.UID,
 								},
 								LastTimestamp: event.LastTimestamp,
 								Message:       event.Message,
@@ -493,8 +481,8 @@ func getManager(
 
 	configFiles := []string{tool.Options.HubConfigFilePathName}
 
-	if hubCfg.TLSClientConfig.CertFile != "" {
-		configFiles = append(configFiles, hubCfg.TLSClientConfig.CertFile)
+	if hubCfg.CertFile != "" {
+		configFiles = append(configFiles, hubCfg.CertFile)
 	}
 
 	// use config check
@@ -556,8 +544,8 @@ func getHubManager(
 
 	configFiles := []string{tool.Options.HubConfigFilePathName}
 
-	if hubCfg.TLSClientConfig.CertFile != "" {
-		configFiles = append(configFiles, hubCfg.TLSClientConfig.CertFile)
+	if hubCfg.CertFile != "" {
+		configFiles = append(configFiles, hubCfg.CertFile)
 	}
 
 	// use config check
@@ -594,6 +582,7 @@ func startHealthProxy(ctx context.Context, wg *sync.WaitGroup) error {
 	for _, endpoint := range []string{"/healthz", "/readyz"} {
 		http.HandleFunc(endpoint, func(w http.ResponseWriter, _ *http.Request) {
 			healthAddressesLock.RLock()
+
 			addresses := make([]string, 0, len(healthAddresses))
 
 			// Populate a separate slice to avoid holding the lock too long.
@@ -981,9 +970,11 @@ func manageGatekeeperSyncManager(
 			watcher = nil
 		case result := <-watcher.ResultChan():
 			// If the CRD is added, then Gatekeeper is installed.
-			if result.Type == apiWatch.Added {
+			//nolint:exhaustive
+			switch result.Type {
+			case apiWatch.Added:
 				gatekeeperInstalled = true
-			} else if result.Type == apiWatch.Deleted {
+			case apiWatch.Deleted:
 				gatekeeperInstalled = false
 			}
 		}

@@ -80,12 +80,14 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 			g.Expect(deployments.Items).ToNot(BeEmpty())
 
 			var available bool
+
 			for _, deployment := range deployments.Items {
 				for _, condition := range deployment.Status.Conditions {
 					if condition.Reason == "MinimumReplicasAvailable" {
 						available = condition.Status == "True"
 					}
 				}
+
 				g.Expect(available).To(BeTrue())
 			}
 		}, defaultTimeoutSeconds, 1).Should(Succeed())
@@ -93,6 +95,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 
 	AfterAll(func() {
 		By("Deleting the namespace " + configMapNamespace)
+
 		err := clientManaged.CoreV1().Namespaces().Delete(context.TODO(), configMapNamespace, metav1.DeleteOptions{})
 		if !k8serrors.IsNotFound(err) {
 			Expect(err).ToNot(HaveOccurred())
@@ -100,6 +103,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 
 		for _, pName := range []string{policyName, policyName2} {
 			By("Deleting policy " + pName + " on the hub in ns:" + clusterNamespaceOnHub)
+
 			err := clientHubDynamic.Resource(gvrPolicy).Namespace(clusterNamespaceOnHub).Delete(
 				context.TODO(), pName, metav1.DeleteOptions{},
 			)
@@ -133,8 +137,8 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 				fixed := false
 
 				for i := range webhook.Webhooks {
-					if strings.HasPrefix(webhook.Webhooks[i].Name, "not-") {
-						webhook.Webhooks[i].Name = strings.TrimPrefix(webhook.Webhooks[i].Name, "not-")
+					if after, ok := strings.CutPrefix(webhook.Webhooks[i].Name, "not-"); ok {
+						webhook.Webhooks[i].Name = after
 						fixed = true
 					}
 				}
@@ -144,6 +148,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 				}
 
 				By("Updating the Gatekeeper webhook")
+
 				_, err = clientManaged.AdmissionregistrationV1().ValidatingWebhookConfigurations().Update(
 					context.TODO(), webhook, metav1.UpdateOptions{},
 				)
@@ -170,12 +175,14 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 		By("Creating policy " + policyName + " on the hub in ns:" + clusterNamespaceOnHub)
 		_, err := kubectlHub("apply", "-f", policyYaml, "-n", clusterNamespaceOnHub)
 		Expect(err).ShouldNot(HaveOccurred())
+
 		plc := propagatorutils.GetWithTimeout(clientManagedDynamic, gvrPolicy, policyName, clusterNamespace, true,
 			defaultTimeoutSeconds)
 		Expect(plc).NotTo(BeNil())
 		By("Creating policy " + policyName2 + " on the hub in ns:" + clusterNamespaceOnHub)
 		_, err = kubectlHub("apply", "-f", policyYaml2, "-n", clusterNamespaceOnHub)
 		Expect(err).ShouldNot(HaveOccurred())
+
 		plc = propagatorutils.GetWithTimeout(clientManagedDynamic, gvrPolicy, policyName, clusterNamespace, true,
 			defaultTimeoutSeconds)
 		Expect(plc).NotTo(BeNil())
@@ -183,24 +190,27 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 
 	It("should create Gatekeeper constraints on the managed cluster", func() {
 		By("Checking for the synced ConstraintTemplate " + gkConstraintTemplateName)
+
 		expectedConstraintTemplate := propagatorutils.ParseYaml(gkConstraintTemplateYaml)
-		Eventually(func() interface{} {
+		Eventually(func() any {
 			trustedPlc := propagatorutils.GetWithTimeout(clientManagedDynamic, gvrConstraintTemplate,
 				gkConstraintTemplateName, "", true, defaultTimeoutSeconds)
 
 			return trustedPlc.Object["spec"]
 		}, defaultTimeoutSeconds, 1).Should(propagatorutils.SemanticEqual(expectedConstraintTemplate.Object["spec"]))
 		By("Checking for the synced Constraint " + gkConstraintName)
+
 		expectedConstraint := propagatorutils.ParseYaml(gkConstraintYaml)
-		Eventually(func() interface{} {
+		Eventually(func() any {
 			trustedPlc := propagatorutils.GetWithTimeout(clientManagedDynamic, gvrConstraint,
 				gkConstraintName, "", true, defaultTimeoutSeconds)
 
 			return trustedPlc.Object["spec"]
 		}, defaultTimeoutSeconds, 1).Should(propagatorutils.SemanticEqual(expectedConstraint.Object["spec"]))
 		By("Checking for the synced Constraint " + gkConstraintName2)
+
 		expectedConstraint2 := propagatorutils.ParseYaml(gkConstraintYaml2)
-		Eventually(func() interface{} {
+		Eventually(func() any {
 			trustedPlc := propagatorutils.GetWithTimeout(clientManagedDynamic, gvrConstraint,
 				gkConstraintName2, "", true, defaultTimeoutSeconds)
 
@@ -216,9 +226,10 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 			Expect(managedPlc).NotTo(BeNil())
 
 			var compliance string
+
 			detailsSlice, found, err := unstructured.NestedSlice(managedPlc.Object, "status", "details")
 			if found {
-				compliance, _, _ = unstructured.NestedString(detailsSlice[0].(map[string]interface{}), "compliant")
+				compliance, _, _ = unstructured.NestedString(detailsSlice[0].(map[string]any), "compliant")
 			} else if err != nil {
 				GinkgoWriter.Printf("Failed to retrieve compliance: %s\n", err)
 			}
@@ -244,6 +255,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 			g.Expect(managedPolicy.Status.Details[1].TemplateMeta.GetName()).To(Equal(gkConstraintName))
 			history := managedPolicy.Status.Details[1].History
 			g.Expect((history)).ToNot(BeEmpty())
+
 			expectedMsg := "Compliant; The constraint has no violations"
 			g.Expect(history[0].Message).To(
 				Equal(expectedMsg),
@@ -252,6 +264,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 		}, gkAuditFrequency*3, 1).Should(Succeed())
 
 		By("Adding ConfigMaps that violate the constraint")
+
 		for _, cmName := range []string{configMapName, configMap2Name} {
 			configMap := &corev1.ConfigMap{
 				TypeMeta: metav1.TypeMeta{
@@ -284,6 +297,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 
 			history := managedPolicy.Status.Details[1].History
 			g.Expect((history)).ToNot(BeEmpty())
+
 			validMsgs := []string{
 				`NonCompliant; warn - All configmaps must have a 'my-gk-test' label (on ConfigMap ` +
 					`case17-gk-test/case17-test); warn - All configmaps must have a 'my-gk-test' label ` +
@@ -311,7 +325,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 	It("should deny an invalid ConfigMap when remediationAction=enforce", func() {
 		By("Patching the remediationAction to enforce")
 		Eventually(
-			func() interface{} {
+			func() any {
 				managedPlc := propagatorutils.GetWithTimeout(
 					clientHubDynamic, gvrPolicy, policyName, clusterNamespaceOnHub, true, defaultTimeoutSeconds,
 				)
@@ -339,6 +353,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 		).Should(Succeed())
 
 		By("Trying to create a ConfigMap that violates the constraint")
+
 		configMap := &corev1.ConfigMap{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "ConfigMap",
@@ -398,6 +413,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 
 			history := managedPolicy.Status.Details[1].History
 			g.Expect((history)).ToNot(BeEmpty())
+
 			validMsgs := []string{
 				`NonCompliant; The Gatekeeper validating webhook is disabled but the constraint's ` +
 					`spec.enforcementAction is deny. deny - All configmaps must have a 'my-gk-test' label ` +
@@ -438,19 +454,22 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 
 	It("should add a Constraint and ConstraintTemplate when added to policy-templates", func() {
 		By("Adding a Constraint and ConstraintTemplate to the policy-templates array")
+
 		_, err := kubectlHub("apply", "-f", policyYamlExtra, "-n", clusterNamespaceOnHub)
 		Expect(err).ToNot(HaveOccurred())
 		By("Checking for the synced Constraint " + gkConstraintNameExtra)
+
 		expectedConstraint := propagatorutils.ParseYaml(gkConstraintYamlExtra)
-		Eventually(func() interface{} {
+		Eventually(func() any {
 			trustedPlc := propagatorutils.GetWithTimeout(clientManagedDynamic, gvrConstraint,
 				gkConstraintNameExtra, "", true, defaultTimeoutSeconds)
 
 			return trustedPlc.Object["spec"]
 		}, defaultTimeoutSeconds, 1).Should(propagatorutils.SemanticEqual(expectedConstraint.Object["spec"]))
 		By("Checking for the synced ConstraintTemplate " + gkConstraintTmplNameExtra)
+
 		expectedConstraintTmpl := propagatorutils.ParseYaml(gkConstraintTmplYamlExtra)
-		Eventually(func() interface{} {
+		Eventually(func() any {
 			trustedPlc := propagatorutils.GetWithTimeout(clientManagedDynamic, gvrConstraintTemplate,
 				gkConstraintTmplNameExtra, "", true, defaultTimeoutSeconds)
 
@@ -460,15 +479,16 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 
 	It("should remove a Constraint and ConstraintTemplate when removed from policy-templates", func() {
 		By("Removing a Constraint and ConstraintTemplate from the policy-templates array")
+
 		_, err := kubectlHub("apply", "-f", policyYaml, "-n", clusterNamespaceOnHub)
 		Expect(err).ToNot(HaveOccurred())
 		By("Checking for removed Constraint " + gkConstraintNameExtra)
-		Eventually(func() interface{} {
+		Eventually(func() any {
 			return propagatorutils.GetWithTimeout(clientManagedDynamic, gvrConstraint,
 				gkConstraintNameExtra, "", false, defaultTimeoutSeconds)
 		}, defaultTimeoutSeconds, 1).Should(BeNil())
 		By("Checking for removed ConstraintTemplate " + gkConstraintTmplNameExtra)
-		Eventually(func() interface{} {
+		Eventually(func() any {
 			return propagatorutils.GetWithTimeout(clientManagedDynamic, gvrConstraintTemplate,
 				gkConstraintTmplNameExtra, "", false, defaultTimeoutSeconds)
 		}, defaultTimeoutSeconds, 1).Should(BeNil())
@@ -476,10 +496,12 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 
 	It("should delete template policy on managed cluster", func() {
 		By("Deleting parent policies")
+
 		_, err := kubectlHub("delete", "-f", policyYaml, "-n", clusterNamespaceOnHub)
 		Expect(err).ShouldNot(HaveOccurred())
 		_, err = kubectlHub("delete", "-f", policyYaml2, "-n", clusterNamespaceOnHub)
 		Expect(err).ShouldNot(HaveOccurred())
+
 		opt := metav1.ListOptions{}
 		propagatorutils.ListWithTimeout(clientManagedDynamic, gvrPolicy, opt, 0, true, defaultTimeoutSeconds)
 		By("Checking for the existence of ConstraintTemplate " + gkConstraintTemplateName)
@@ -506,6 +528,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 
 		BeforeAll(func(ctx context.Context) {
 			By("Deleting any ConfigMaps in the test namespace, to prevent any initial violations")
+
 			err := clientManaged.CoreV1().ConfigMaps(configMapNamespace).DeleteCollection(
 				ctx, metav1.DeleteOptions{}, metav1.ListOptions{},
 			)
@@ -515,6 +538,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 		AfterAll(func() {
 			for _, pName := range []string{waitForTemplateName, waitForConstraintName} {
 				By("Deleting policy " + pName + " on the hub in ns:" + clusterNamespaceOnHub)
+
 				err := clientHubDynamic.Resource(gvrPolicy).Namespace(clusterNamespaceOnHub).Delete(
 					context.TODO(), pName, metav1.DeleteOptions{},
 				)
@@ -549,7 +573,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 			)).NotTo(BeNil())
 
 			By("Checking that the configuration policy is not found, because it should be pending")
-			Consistently(func() interface{} {
+			Consistently(func() any {
 				return propagatorutils.GetWithTimeout(
 					clientManagedDynamic,
 					gvrConfigurationPolicy,
@@ -560,6 +584,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 			}, 10, 1).Should(BeNil())
 
 			By("Creating the policy with the ConstraintTemplate")
+
 			_, err = kubectlHub("apply", "-f", policyYaml, "-n", clusterNamespaceOnHub)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(propagatorutils.GetWithTimeout(
@@ -625,6 +650,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 
 		It("should become Pending when there are violations on the constraint", func() {
 			By("Adding a ConfigMap that violates the constraint")
+
 			configMap := &corev1.ConfigMap{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "ConfigMap",
@@ -671,6 +697,7 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate and constraint sync", Order
 
 		It("should progress again when the violations are addressed", func() {
 			By("Deleting the ConfigMap causing the violation")
+
 			err := clientManaged.CoreV1().ConfigMaps(configMapNamespace).Delete(
 				context.TODO(), configMapName, metav1.DeleteOptions{},
 			)
@@ -725,12 +752,14 @@ var _ = Describe("Test Gatekeeper ConstraintTemplate error", Ordered, Label("ski
 			g.Expect(deployments.Items).ToNot(BeEmpty())
 
 			var available bool
+
 			for _, deployment := range deployments.Items {
 				for _, condition := range deployment.Status.Conditions {
 					if condition.Reason == "MinimumReplicasAvailable" {
 						available = condition.Status == "True"
 					}
 				}
+
 				g.Expect(available).To(BeTrue())
 			}
 		}, defaultTimeoutSeconds, 1).Should(Succeed(), "Gatekeeper should be installed before the test")
