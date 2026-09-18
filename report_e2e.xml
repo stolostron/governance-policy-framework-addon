@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <testsuites tests="101" disabled="98" errors="0" failures="0" time="37.32796139">
+      <testsuite name="Governance Policy Framework Addon e2e Suite" package="/home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e" tests="101" disabled="0" skipped="98" errors="0" failures="0" time="37.32796139" timestamp="2026-06-17T14:27:39">
+          <properties>
+              <property name="SuiteSucceeded" value="true"></property>
+              <property name="SuiteHasProgrammaticFocus" value="true"></property>
+              <property name="SpecialSuiteFailureReason" value=""></property>
+              <property name="SuiteLabels" value="[]"></property>
+              <property name="SuiteSemVerConstraints" value="[]"></property>
+              <property name="SuiteComponentSemVerConstraints" value="[]"></property>
+              <property name="RandomSeed" value="1781731659"></property>
+              <property name="RandomizeAllSpecs" value="false"></property>
+              <property name="LabelFilter" value=""></property>
+              <property name="SemVerFilter" value=""></property>
+              <property name="FocusStrings" value=""></property>
+              <property name="SkipStrings" value=""></property>
+              <property name="FocusFiles" value=""></property>
+              <property name="SkipFiles" value=""></property>
+              <property name="FailOnPending" value="false"></property>
+              <property name="FailOnEmpty" value="false"></property>
+              <property name="FailFast" value="false"></property>
+              <property name="FlakeAttempts" value="0"></property>
+              <property name="DryRun" value="false"></property>
+              <property name="ParallelTotal" value="1"></property>
+              <property name="OutputInterceptorMode" value=""></property>
+          </properties>
+          <testcase name="[BeforeSuite]" classname="Governance Policy Framework Addon e2e Suite" status="passed" time="21.070252336">
+              <system-err>&gt; Enter [BeforeSuite] TOP-LEVEL - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/e2e_suite_test.go:87 @ 06/17/26 14:27:39.983&#xA;STEP: Setup Hub and Managed client - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/e2e_suite_test.go:88 @ 06/17/26 14:27:39.983&#xA;STEP: Create Namespace if needed - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/e2e_suite_test.go:125 @ 06/17/26 14:27:39.987&#xA;STEP: Create EventRecorder - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/e2e_suite_test.go:157 @ 06/17/26 14:27:39.996&#xA;STEP: Deleting the constrainttemplate CRD to simulate uninstalling Gatekeeper - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/e2e_suite_test.go:201 @ 06/17/26 14:27:39.997&#xA;STEP: Waiting 10 seconds for the manager to detect missing CRD - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/e2e_suite_test.go:217 @ 06/17/26 14:27:41.017&#xA;STEP: Re-creating the constrainttemplate CRD to simulate re-installing Gatekeeper - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/e2e_suite_test.go:227 @ 06/17/26 14:27:51.026&#xA;STEP: Waiting 10 seconds for the manager to detect the fresh CRD - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/e2e_suite_test.go:231 @ 06/17/26 14:27:51.044&#xA;&lt; Exit [BeforeSuite] TOP-LEVEL - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/e2e_suite_test.go:87 @ 06/17/26 14:28:01.053 (21.07s)&#xA;</system-err>
+          </testcase>
+          <testcase name="[It] Test owner reference recovery Should restore owner references that are edited out of the child config policy" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync with multiple templates Should merge existing status with new status from event" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync with multiple templates Should merge status with new status on the template" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync with multiple templates Should de-duplicate an event present in both the template and on the cluster" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync with multiple templates Should preserve history properly when event sources disappear" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test spec sync should create policy on managed cluster" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test spec sync should update policy on the hub" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test spec sync should update policy to a different policy template" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test spec sync should delete policy on managed cluster" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test dependency logic in template sync When dependency is compliant Should set to compliant when dep status is compliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test dependency logic in template sync When dependency is noncompliant Should set to Pending when dep status is NonCompliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test dependency logic in template sync With ignorePending Should set to Compliant when dep status is NonCompliant and ignorePending is true" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test dependency logic in template sync When dependency status is resolved Should set to Compliant when dep status is resolved" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test dependency logic in template sync When dependency becomes noncompliant after being compliant Should remove template if dependency changes" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test dependency logic in template sync Multiple dependencies Should process extra dependencies properly" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test dependency logic in template sync Multiple templates Should handle policies with multiple templates (with different dependencies) properly" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test dependency logic in template sync Edge cases Should correct a late compliance event while the policy is pending" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test dependency logic in template sync Edge cases Should function properly despite a nonexistent dependency kind" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test user error metrics Should increment user error metric on user error" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test user error metrics Should clean up user error metric on policy deletion" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test mutation recovery Should recover policy on managed if spec.remediationAction being modified" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test mutation recovery Should recover policy on managed if spec.policyTemplates being modified" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test mutation recovery Should recover policy on managed if being deleted" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test mutation recovery Should recover status if policy status being modified" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test template sync should create policy template on managed cluster and remove it on rename" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test proper metrics handling on syntax error Verifies NonCompliant status for non-decodable policy" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test proper metrics handling on syntax error Verifies that validation errors are shown" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test proper metrics handling on syntax error Verifies correct policy does not become NonCompliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test template sync overrides namespace should override the namespace in the template" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync Should set status to compliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync Should set status to NonCompliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync Should set status to Compliant again" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync Should hold up to last 10 history" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test event message handling Should remove `(combined from similar events):` prefix but still noncompliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test event message handling Should remove `(combined from similar events):` prefix but still compliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test event message handling Should handle violation msg with just NonCompliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test event message handling Should handle violation msg with just Compliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should not reconcile the policy when there are same names in policy-template" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should not override remediationAction if doesn&#39;t exist on parent policy" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should generate decode err event" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should generate missing name err event" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should generate mapping err event" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should generate creation err event" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should generate unsupported object err event" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should generate duplicate policy template err event" classname="Governance Policy Framework Addon e2e Suite" status="passed" time="16.255751991">
+              <system-err>&gt; Enter [It] should generate duplicate policy template err event - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/case10_error_test.go:172 @ 06/17/26 14:28:01.055&#xA;STEP: Applying policy ../resources/case10_template_sync_error_test/working-policy.yaml to the hub in ns: managed - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/case10_error_test.go:179 @ 06/17/26 14:28:01.055&#xA;STEP: Adding compliance history to the existing configuration policy - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/case10_error_test.go:186 @ 06/17/26 14:28:02.135&#xA;STEP: Applying policy ../resources/case10_template_sync_error_test/working-policy-duplicate.yaml to the hub in ns: managed - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/case10_error_test.go:193 @ 06/17/26 14:28:02.209&#xA;STEP: Checking for event with duplicate err on managed cluster in ns:managed - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/case10_error_test.go:196 @ 06/17/26 14:28:02.279&#xA;STEP: Checking duplicate policy status does not contain foreign template history - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/case10_error_test.go:203 @ 06/17/26 14:28:03.285&#xA;&lt; Exit [It] should generate duplicate policy template err event - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/case10_error_test.go:172 @ 06/17/26 14:28:03.288 (2.233s)&#xA;&gt; Enter [AfterEach] Test error handling - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/case10_error_test.go:30 @ 06/17/26 14:28:03.288&#xA;&lt; Exit [AfterEach] Test error handling - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/case10_error_test.go:30 @ 06/17/26 14:28:17.31 (14.023s)&#xA;</system-err>
+          </testcase>
+          <testcase name="[It] Test error handling should create other objects, even when one is invalid" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should remove the complianceState on a template only after an error is resolved" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling testing hub template errors cases should throw a noncompliance event for hub template errors" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling testing hub template errors cases should patch the pruneObjectBehavior to None during a hub-template-error" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling testing hub template errors cases should mark the policy as pending instead of throwing a hub-template error event" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should throw a noncompliance event if the template object is invalid" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should not throw a noncompliance event if the policy-templates array is empty" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should throw a noncompliance event if the template already exists outside of a policy" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should throw a noncompliance event if the both object-templates and object-templates-raw are set" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should only generate a limited number of events for a missing kind" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test error handling should generate template error when template has unknown fields" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test template sync should create policy template on managed cluster" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test template sync should override remediationAction in spec" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test template sync should still override remediationAction in spec when there is no remediationAction" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test template sync should contains labels from parent policy" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test template sync should delete template policy on managed cluster" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate error Should the policy status is NonCompliant [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test &#39;InformOnly&#39; ConfigurationPolicies Override remediationAction in spec When parent policy have remediationAction=enforce Should have remediationAction=inform" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test &#39;InformOnly&#39; ConfigurationPolicies Override remediationAction in spec When parent policy have no remediationAction field set Should have remediationAction=inform" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test &#39;InformOnly&#39; ConfigurationPolicies Override remediationAction in spec When policy template have no remediationAction field set Should have inherited parent policy&#39;s remediationAction field" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test disabled Gatekeeper sync should create the policy on the managed cluster [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test metrics are exposed Should expose the controller runtime reconcile total for each controller" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test secret sync should sync the secret to the managed cluster when created on the hub" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test secret sync should not sync the unrelated secret to the managed cluster when created on the hub" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test proper metrics handling on syntax error Should increment user error metric when attempting to apply policy with syntax error" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test proper metrics handling on syntax error Should not increment system error metric" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test proper metrics handling on syntax error Should clean up user error metric on policy deletion" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test proper metrics handling on syntax error Should increment user error metric when patching a syntax error onto a correct policy" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test proper metrics handling on syntax error Should not increment system error metric" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync with multiple templates Should not set overall compliancy to compliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync with multiple templates Should not set overall compliancy to compliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync with multiple templates Should not set overall compliancy to compliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync with multiple templates Should set overall compliancy to compliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync with multiple templates Should set overall compliancy to NonCompliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync with multiple templates Should set overall compliancy to NonCompliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync with multiple templates Should remove status when template is removed" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test status sync with multiple templates Should remove status when template is removed" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync should create the policy on the managed cluster [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync should create Gatekeeper constraints on the managed cluster [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync should set status for the ConstraintTemplate to Compliant [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync should return Gatekeeper audit results [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync should deny an invalid ConfigMap when remediationAction=enforce [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync should have an error if the remediationAction=enforce and the Gatekeeper webhook is not enabled [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync should add a Constraint and ConstraintTemplate when added to policy-templates [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync should remove a Constraint and ConstraintTemplate when removed from policy-templates [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync should delete template policy on managed cluster [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync should not repeatedly reconcile the &#39;maxiamclusterbindings&#39; ConstraintTemplate [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync Test policy ordering with gatekeeper objects should not progress until the ConstraintTemplate is created [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync Test policy ordering with gatekeeper objects should progress initially when the constraint has no violations [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync Test policy ordering with gatekeeper objects should become Pending when there are violations on the constraint [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test Gatekeeper ConstraintTemplate and constraint sync Test policy ordering with gatekeeper objects should progress again when the violations are addressed [skip-minimum]" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test event sorting by name when timestamps collide at seconds granularity Creates the policy and one event, and shows compliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test event sorting by name when timestamps collide at seconds granularity Creates a second event with the same timestamp, and shows noncompliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[It] Test event sorting by name when timestamps collide at seconds granularity Creates a third with the same timestamp, and shows compliant" classname="Governance Policy Framework Addon e2e Suite" status="skipped" time="0">
+              <skipped message="skipped"></skipped>
+          </testcase>
+          <testcase name="[DeferCleanup (Suite)]" classname="Governance Policy Framework Addon e2e Suite" status="passed" time="5.6245e-05">
+              <system-err>&gt; Enter [DeferCleanup (Suite)] TOP-LEVEL - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/e2e_suite_test.go:160 @ 06/17/26 14:28:17.311&#xA;&lt; Exit [DeferCleanup (Suite)] TOP-LEVEL - /home/jalaw/Github/ocm/governance-policy-framework-addon/test/e2e/e2e_suite_test.go:160 @ 06/17/26 14:28:17.311 (0s)&#xA;</system-err>
+          </testcase>
+      </testsuite>
+  </testsuites>

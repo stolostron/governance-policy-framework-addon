@@ -14,7 +14,7 @@ import (
 
 var log = ctrl.Log.WithName("cmd")
 
-// PolicySpecSyncOptions for command line flag parsing
+// SyncerOptions PolicySpecSyncOptions for command line flag parsing
 type SyncerOptions struct {
 	ClusterNamespaceOnHub     string
 	HubConfigFilePathName     string
