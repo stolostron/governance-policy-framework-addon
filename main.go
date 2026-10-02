@@ -296,7 +296,7 @@ func main() {
 	mainCtx := ctrl.SetupSignalHandler()
 	mgrCtx, mgrCtxCancel := context.WithCancel(mainCtx)
 
-	mgr := getManager(mgrOptionsBase, mgrHealthAddr, hubCfg, managedCfg)
+	mgr := getManager(mgrCtx, mgrOptionsBase, mgrHealthAddr, hubCfg, managedCfg)
 
 	var hubMgr manager.Manager
 
@@ -309,7 +309,7 @@ func main() {
 
 		healthAddresses[hubMgrHealthAddr] = true
 
-		hubMgr = getHubManager(mgrOptionsBase, hubMgrHealthAddr, hubCfg, managedCfg)
+		hubMgr = getHubManager(mgrCtx, mgrOptionsBase, hubMgrHealthAddr, hubCfg, managedCfg)
 	}
 
 	healthAddressesLock.Unlock()
@@ -429,7 +429,7 @@ func main() {
 
 // getManager return a controller Manager object that watches on the managed cluster and has the controllers registered.
 func getManager(
-	options manager.Options, healthAddr string, hubCfg *rest.Config, managedCfg *rest.Config,
+	ctx context.Context, options manager.Options, healthAddr string, hubCfg *rest.Config, managedCfg *rest.Config,
 ) manager.Manager {
 	crdLabelSelector := labels.SelectorFromSet(map[string]string{utils.PolicyTypeLabel: "template"})
 
@@ -484,7 +484,7 @@ func getManager(
 		},
 	}
 
-	mgr, err := ctrl.NewManager(managedCfg, options)
+	mgr, err := utils.NewManagerWithRetry(ctx, log, managedCfg, options)
 	if err != nil {
 		log.Error(err, "unable to start manager")
 		os.Exit(1)
@@ -519,7 +519,7 @@ func getManager(
 
 // getHubManager return a controller Manager object that watches on the Hub and has the controllers registered.
 func getHubManager(
-	options manager.Options, healthAddr string, hubCfg *rest.Config, managedCfg *rest.Config,
+	ctx context.Context, options manager.Options, healthAddr string, hubCfg *rest.Config, managedCfg *rest.Config,
 ) manager.Manager {
 	// Set the manager options
 	options.HealthProbeBindAddress = healthAddr
@@ -547,7 +547,7 @@ func getHubManager(
 	options.Metrics.BindAddress = "0"
 
 	// Create a new manager to provide shared dependencies and start components
-	mgr, err := ctrl.NewManager(hubCfg, options)
+	mgr, err := utils.NewManagerWithRetry(ctx, log, hubCfg, options)
 	if err != nil {
 		log.Error(err, "Failed to start manager")
 		os.Exit(1)
